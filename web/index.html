@@ -8,76 +8,129 @@
 </head>
 <body>
 <div id="app">
-  <header id="toolbar">
-    <span id="logo">PDFloom <em>Studio</em></span>
-    <select id="page-size" title="Page size for new pages" aria-label="Page size for new pages"></select>
-    <button id="add-page" title="Add a page" aria-label="Add page">+ Page</button>
-    <span class="sep"></span>
-    <button data-add="heading" title="Add heading" aria-label="Add heading">H</button>
-    <button data-add="paragraph" title="Add paragraph" aria-label="Add paragraph">&para;</button>
-    <button data-add="list" title="Add list" aria-label="Add list">&#8226;</button>
-    <button data-add="table" title="Add table" aria-label="Add table">&#9638;</button>
-    <button data-add="image" title="Add image" aria-label="Add image">&#128247;</button>
-    <button data-add="form_field" title="Add form field" aria-label="Add form field">&#9635;</button>
-    <button data-add="rect" title="Add box" aria-label="Add box">&#9633;</button>
-    <button data-add="line" title="Add divider" aria-label="Add divider">&#9473;</button>
-    <span class="sep"></span>
-    <button id="zoom-out" title="Zoom out" aria-label="Zoom out">&minus;</button>
-    <span id="zoom-label">100%</span>
-    <button id="zoom-in" title="Zoom in" aria-label="Zoom in">+</button>
-    <button id="toggle-order" title="Show reading order" aria-label="Show reading order">order</button>
-    <button id="toggle-preview" title="Toggle PDF preview" aria-label="Toggle PDF preview">preview</button>
-    <span class="sep"></span>
-    <button id="export-pdf" class="primary" title="Download the tagged PDF" aria-label="Download PDF">Download PDF</button>
-    <button id="export-config" title="Download the pdfloom-doc config" aria-label="Download config">Download config</button>
-    <button id="import-config" title="Open a pdfloom-doc config" aria-label="Import a pdfloom-doc config">Import</button>
-    <input type="file" id="config-file" accept=".json,application/json" hidden>
-    <input type="file" id="image-file" accept="image/png,image/jpeg" hidden>
-    <button id="new-doc" title="Reset document" aria-label="Reset document">&#9851;</button>
+
+  <header id="topbar">
+    <div id="tb-left">
+      <span id="logo">PDFloom <em>Studio</em></span>
+    </div>
+    <div id="tb-center">
+      <input id="doc-title" spellcheck="false" autocomplete="off"
+             title="Document title" aria-label="Document title">
+    </div>
+    <div id="tb-right">
+      <button id="undo-btn" class="icon-btn" data-icon="undo"
+              title="Undo (Ctrl/Cmd+Z)" aria-label="Undo"></button>
+      <button id="redo-btn" class="icon-btn" data-icon="redo"
+              title="Redo (Ctrl/Cmd+Shift+Z)" aria-label="Redo"></button>
+      <span class="tb-sep"></span>
+      <button id="toggle-order" class="icon-btn" data-icon="order"
+              title="Show reading-order badges" aria-label="Toggle reading-order badges"></button>
+      <button id="toggle-preview" class="icon-btn" data-icon="preview" data-label="Preview"
+              title="Toggle the PDF preview" aria-label="Toggle PDF preview"></button>
+      <span class="tb-sep"></span>
+      <button id="import-config" class="icon-btn" data-icon="import" data-label="Import"
+              title="Open a pdfloom-doc config" aria-label="Import a pdfloom-doc config"></button>
+      <button id="export-config" class="icon-btn" data-icon="config" data-label="Config"
+              title="Download the pdfloom-doc config" aria-label="Download config"></button>
+      <button id="export-pdf" class="primary" data-icon="download" data-label="Download PDF"
+              title="Download the tagged PDF" aria-label="Download PDF"></button>
+      <button id="new-doc" class="icon-btn" data-icon="trash"
+              title="New document (discard current)" aria-label="New document"></button>
+    </div>
   </header>
 
-  <main>
-    <aside id="pages-panel">
-      <h3>Pages</h3>
-      <div id="pages-list"></div>
+  <div id="body">
+
+    <aside id="left-panel">
+      <section id="pages-section">
+        <div class="panel-head">
+          <h3>Pages</h3>
+          <div class="head-actions">
+            <select id="page-size" title="Page size for new pages"
+                    aria-label="Page size for new pages"></select>
+            <button id="add-page" class="icon-btn small" data-icon="plus"
+                    title="Add page" aria-label="Add page"></button>
+          </div>
+        </div>
+        <div id="pages-list"></div>
+      </section>
+
+      <section id="layers-section">
+        <div class="panel-head">
+          <h3>Layers</h3>
+        </div>
+        <div id="layers-list"></div>
+      </section>
     </aside>
 
-    <section id="canvas-wrap">
-      <div id="canvas"></div>
-    </section>
-
-    <aside id="props-panel">
-      <h3 id="props-title">Properties</h3>
-      <div id="props-empty">Select an element to edit its properties.
-        Drag to move; use the corner handles to resize.</div>
-      <div id="props"></div>
-      <div id="order-box">
-        <label>Reading order
-          <input type="number" id="order-input" min="0" step="1">
-        </label>
-        <small>Lower numbers are read first by screen readers.</small>
+    <main id="canvas-area">
+      <div id="canvas-wrap">
+        <div id="canvas-sizer">
+          <div id="page-label" class="page-label"></div>
+          <div id="scale-box">
+            <div id="the-page" class="page"></div>
+          </div>
+        </div>
       </div>
+
+      <div id="insert-bar" role="toolbar" aria-label="Insert elements">
+        <button data-add="heading" data-icon="H" title="Add heading" aria-label="Add heading"></button>
+        <button data-add="paragraph" data-icon="&#182;" title="Add paragraph" aria-label="Add paragraph"></button>
+        <button data-add="list" data-icon="&#8226;" title="Add list" aria-label="Add list"></button>
+        <span class="ib-sep"></span>
+        <button data-add="table" data-icon="table" title="Add table" aria-label="Add table"></button>
+        <button data-add="image" data-icon="image" title="Add image" aria-label="Add image"></button>
+        <button data-add="form_field" data-icon="form_field" title="Add form field" aria-label="Add form field"></button>
+        <span class="ib-sep"></span>
+        <button data-add="rect" data-icon="rect" title="Add box" aria-label="Add box"></button>
+        <button data-add="line" data-icon="line" title="Add divider line" aria-label="Add divider line"></button>
+      </div>
+
+      <div id="zoom-bar" role="toolbar" aria-label="Zoom">
+        <button id="zoom-out" class="icon-btn" data-icon="minus"
+                title="Zoom out (Ctrl/Cmd+-)" aria-label="Zoom out"></button>
+        <button id="zoom-pct" title="Reset zoom to 100%">100%</button>
+        <button id="zoom-in" class="icon-btn" data-icon="plus"
+                title="Zoom in (Ctrl/Cmd++)" aria-label="Zoom in"></button>
+        <span class="zb-sep"></span>
+        <button id="zoom-fit" title="Zoom to fit (Shift+0)" aria-label="Zoom to fit">Fit</button>
+      </div>
+
+      <div id="dim-badge" hidden></div>
+    </main>
+
+    <aside id="right-panel">
+      <div id="inspector"></div>
     </aside>
 
-    <section id="preview-panel" hidden>
+    <aside id="preview-panel" hidden>
       <div id="preview-head">
-        <h3>PDF preview</h3>
-        <button id="preview-close" title="Close preview" aria-label="Close preview">&times;</button>
+        <h3>Preview</h3>
+        <span class="head-actions">
+          <button id="preview-refresh" class="icon-btn" data-icon="refresh"
+                  title="Rebuild the preview" aria-label="Rebuild preview"></button>
+          <button id="preview-close" class="icon-btn"
+                  title="Close preview" aria-label="Close preview">&times;</button>
+        </span>
       </div>
       <div id="preview-stage">
         <iframe id="preview-frame" title="PDF preview"></iframe>
         <div id="preview-state" role="status" hidden>
-          <p id="preview-message">Click preview to build the PDF</p>
+          <p id="preview-message">Building the PDF&hellip;</p>
         </div>
       </div>
-    </section>
-  </main>
+    </aside>
+
+  </div>
 
   <footer id="status-bar">
     <span id="compliance-badge" class="unknown">not built yet</span>
-    <span id="status-text">Drag elements, then Download PDF. The same layout
-      can be rebuilt from code with: pdfloom build config.json</span>
+    <span id="status-text">Drag elements, then Download PDF. Rebuild from code with: pdfloom build config.json</span>
+    <span id="status-hints">double-click text to edit &middot; drag to move &middot; arrows nudge &middot; Ctrl/Cmd+Z undo</span>
   </footer>
+
+  <input type="file" id="config-file" accept=".json,application/json" hidden>
+  <input type="file" id="image-file" accept="image/png,image/jpeg" hidden>
 </div>
 <script src="/app.js"></script>
 </body>

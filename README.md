@@ -73,7 +73,7 @@ check.
 | Forms | AcroForm text fields with /TU accessible names; incremental-save `fill_text_field` |
 | HTML to PDF | Structural subset (headings, lists, tables, images, implied paragraphs, entities) to streamed tagged PDF |
 | Drawing kit | ASME Y14 sheets A-F, tagged title block, Y14.5 dimensions, Y14.35 revision block from file history |
-| Studio | Visual editor (`cargo run -p pdfloom-server`) - drag/resize/zoom, reading-order control, compliance badge; Download PDF + config side by side; `pdfloom build` replays the config to a byte-identical PDF through code |
+| Studio | Visual editor (`cargo run -p pdfloom-server`) - Figma-style dark UI; drag/resize/zoom (wheel, fit), inline text editing, layers panel with reading-order control, alignment, copy/paste, undo/redo, compliance badge; Download PDF + config side by side; `pdfloom build` replays the config to a byte-identical PDF through code |
 | Reader | Classic, xref-stream and hybrid xref; lazy resolution; repair mode |
 | Retag | Open any PDF (even untagged), tag it, save it compliant |
 | Extraction | Text blocks from any PDF, tagged or not; honors ActualText |
@@ -116,6 +116,15 @@ tool only, never linked or bundled.
 for visually laying out tagged documents: pages, headings, paragraphs,
 lists, tables, images, form fields and decorations with drag, resize,
 zoom, reading-order control and a compliance badge from every build.
+
+The UI is a Figma-style dark workspace: page + layers panel on the
+left, the canvas with a floating insert toolbar and zoom pill below,
+the inspector on the right. Doc-editor behavior: double-click text
+elements to edit them in place, arrows nudge (Shift = 10pt),
+Ctrl/Cmd+C/X/V copy/cut/paste, Ctrl/Cmd+D duplicate, Ctrl/Cmd+Z undo,
+Escape deselects, Ctrl/Cmd+wheel zooms toward the cursor, space or
+middle mouse pans, Shift+0 zooms to fit. `#selftest` after the URL
+runs the editor's headless smoke test.
 
     cargo run -p pdfloom-server     # http://localhost:8321
 
