@@ -1,6 +1,8 @@
 [package]
 name = "pdfloom-canvas"
 description = "Vector canvas: content stream construction and marked content"
+categories = ["text-processing"]
+keywords = ["pdf", "pdfua", "accessibility", "tagged", "unicode"]
 version.workspace = true
 edition.workspace = true
 license.workspace = true

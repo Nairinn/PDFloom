@@ -1,4 +1,6 @@
 [package]
+# Distributed via Kotlin/Java bindings build, not crates.io.
+publish = false
 name = "pdfloom-uniffi"
 description = "Kotlin/Java bindings for pdfloom via UniFFI"
 version.workspace = true

@@ -1,6 +1,8 @@
 [package]
 name = "pdfloom-server"
 description = "Web service and static host for the PDFloom visual editor"
+categories = ["web-programming"]
+keywords = ["pdf", "web", "editor", "pdfua", "axum"]
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -12,7 +14,7 @@ name = "pdfloom-server"
 path = "src/main.rs"
 
 [dependencies]
-pdfloom-def = { path = "../pdfloom-def" }
+pdfloom-def = { path = "../pdfloom-def", version = "0.1.0" }
 pdfloom-profile = { workspace = true }
 axum = "0.8"
 tokio = { version = "1", features = ["rt-multi-thread", "net", "signal"] }

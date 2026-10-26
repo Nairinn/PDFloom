@@ -1,6 +1,8 @@
 [package]
 name = "pdfloom-draw"
 description = "Engineering drawing kit: ASME Y14 sheets, frames, title blocks, dimensions"
+categories = ["graphics"]
+keywords = ["pdf", "engineering", "drawing", "y14", "accessibility"]
 version.workspace = true
 edition.workspace = true
 license.workspace = true

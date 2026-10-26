@@ -1,6 +1,8 @@
 [package]
 name = "pdfloom-core"
 description = "PDF object model, serializer and low-level document writer"
+categories = ["text-processing"]
+keywords = ["pdf", "pdfua", "accessibility", "tagged", "unicode"]
 version.workspace = true
 edition.workspace = true
 license.workspace = true

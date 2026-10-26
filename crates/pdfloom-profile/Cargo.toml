@@ -1,6 +1,8 @@
 [package]
 name = "pdfloom-profile"
 description = "Conformance profiles (PDF/UA-1 and PDF/UA-2) and the save report"
+categories = ["text-processing"]
+keywords = ["pdf", "pdfua", "accessibility", "tagged", "unicode"]
 version.workspace = true
 edition.workspace = true
 license.workspace = true

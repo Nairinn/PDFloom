@@ -3,6 +3,8 @@ name = "pdfloom-render"
 version = "0.1.0"
 edition = "2021"
 description = "Rasterize PDF pages to in-memory bitmaps (display/print pipeline)"
+categories = ["graphics"]
+keywords = ["pdf", "rasterizer", "renderer", "png", "accessibility"]
 license = "MIT"
 
 [dependencies]
