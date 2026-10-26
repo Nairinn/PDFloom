@@ -317,6 +317,13 @@ impl Document {
         self.registry.register(family, style, path);
     }
 
+    /// Register a font from in-memory bytes (the browser path: the
+    /// editor fetches bundled OFL fonts and hands the bytes over).
+    /// Byte fonts win over every other source for that family+style.
+    pub fn register_font_bytes(&mut self, family: &str, style: &str, data: Vec<u8>) {
+        self.registry.register_bytes(family, style, data);
+    }
+
     /// Register an image for later drawing; returns the resource name.
     pub fn register_image(&mut self, img: &Image) -> String {
         self.images.push(img.clone());
@@ -468,16 +475,11 @@ impl Document {
         v
     }
 
-    /// Serialize the document, write it to `path`, and return the
-    /// accessibility report. The file is always written — compliance issues
-    /// go into the report, and the file simply does not claim PDF/UA.
+    /// Serialize the document in memory and return `(bytes, report)`.
+    /// The browser/WASM path calls this directly: nothing touches the
+    /// disk. `save()` is a thin file-writing wrapper around it.
     #[allow(clippy::too_many_lines)]
-    pub fn save(&mut self, path: &str) -> Result<SaveReport, Box<dyn std::error::Error>> {
-        // The output directory may not exist yet (fresh clone, CI); a
-        // missing parent should never fail the write.
-        if let Some(parent) = std::path::Path::new(path).parent() {
-            let _ = std::fs::create_dir_all(parent);
-        }
+    pub fn to_bytes(&mut self) -> Result<(Vec<u8>, SaveReport), Box<dyn std::error::Error>> {
         // 1. Machine checks decide whether the file may claim PDF/UA.
         let violations = self.violations();
         let compliant = violations.is_empty();
@@ -1015,9 +1017,8 @@ impl Document {
         cat.set("Metadata", metadata);
         doc.set(catalog, Object::Dict(cat));
 
-        // 3. Serialize and write.
+        // 3. Serialize.
         let bytes = doc.serialize(self.profile.pdf_version(), catalog)?;
-        std::fs::write(path, bytes)?;
 
         // 4. Report.
         let mut human_review = vec![
@@ -1030,12 +1031,29 @@ impl Document {
                 "pdfloom: Font \"{asked}\" was not available; \"{used}\" was used instead"
             ));
         }
-        Ok(SaveReport {
-            profile: self.profile,
-            status,
-            violations,
-            human_review,
-        })
+        Ok((
+            bytes,
+            SaveReport {
+                profile: self.profile,
+                status,
+                violations,
+                human_review,
+            },
+        ))
+    }
+
+    /// Serialize the document, write it to `path`, and return the
+    /// accessibility report. The file is always written — compliance issues
+    /// go into the report, and the file simply does not claim PDF/UA.
+    pub fn save(&mut self, path: &str) -> Result<SaveReport, Box<dyn std::error::Error>> {
+        // The output directory may not exist yet (fresh clone, CI); a
+        // missing parent should never fail the write.
+        if let Some(parent) = std::path::Path::new(path).parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        let (bytes, report) = self.to_bytes()?;
+        std::fs::write(path, bytes)?;
+        Ok(report)
     }
 
     /// Emit a Type0 (composite) font with a CIDFontType2 descendant for

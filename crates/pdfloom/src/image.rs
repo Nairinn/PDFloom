@@ -66,12 +66,18 @@ impl Image {
             path: path.into(),
             source,
         })?;
+        Self::from_bytes(bytes).map_err(|_| ImageError::Unsupported(path.into()))
+    }
+
+    /// Load a PNG or JPEG from in-memory bytes (the browser path: no
+    /// filesystem involved). Sniffs the magic bytes to pick a decoder.
+    pub fn from_bytes(bytes: Vec<u8>) -> Result<Self, ImageError> {
         if bytes.len() > 8 && &bytes[..8] == b"\x89PNG\r\n\x1a\n" {
             Self::decode_png(&bytes)
         } else if bytes.len() > 3 && bytes[0] == 0xff && bytes[1] == 0xd8 {
             Self::parse_jpeg(&bytes)
         } else {
-            Err(ImageError::Unsupported(path.into()))
+            Err(ImageError::Unsupported("unrecognized bytes".into()))
         }
     }
 

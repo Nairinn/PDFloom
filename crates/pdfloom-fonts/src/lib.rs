@@ -14,7 +14,9 @@
 
 use pdfloom_font::LoadedFont;
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+#[cfg(not(target_arch = "wasm32"))]
+use std::path::Path;
+use std::path::PathBuf;
 
 /// One catalog entry: where to find the file and how to describe it.
 #[derive(Debug, Clone)]
@@ -225,11 +227,15 @@ fn eq_ignore_case(a: &str, b: &str) -> bool {
     a.eq_ignore_ascii_case(b)
 }
 
-/// The resolved location of a font file.
+/// The resolved location of a font file: either a path (native) or the
+/// in-memory bytes a caller registered (browser/WASM).
 #[derive(Debug, Clone)]
 pub struct Resolved {
-    /// Absolute path of the font file.
+    /// Absolute path of the font file (empty when `bytes` is set).
     pub path: PathBuf,
+    /// In-memory font bytes, when this was registered from a byte
+    /// source (browser/WASM path; mutually exclusive with `path`).
+    pub bytes: Option<Vec<u8>>,
     /// Family that was matched.
     pub family: String,
     /// True when this is a look-alike substitution (name not found).
@@ -247,6 +253,9 @@ pub enum RegistryError {
 /// The registry: name → file resolution over catalog + system + user fonts.
 #[derive(Debug, Default)]
 pub struct FontRegistry {
+    /// User-registered in-memory fonts (browser/WASM): family name
+    /// (lowercased) → bytes by style. Checked before everything else.
+    bytes: HashMap<String, HashMap<String, Vec<u8>>>,
     /// User-registered: family name (lowercased) → paths by style.
     user: HashMap<String, HashMap<String, PathBuf>>,
     /// System scan cache: family → paths by style.
@@ -278,8 +287,21 @@ impl FontRegistry {
             .insert(style.to_ascii_lowercase(), path.into());
     }
 
+    /// Register a font from in-memory bytes (the browser path: the
+    /// editor fetches bundled OFL fonts and hands the bytes over).
+    /// Byte-registered fonts win over every other source.
+    pub fn register_bytes(&mut self, family: &str, style: &str, data: Vec<u8>) {
+        self.bytes
+            .entry(family.to_ascii_lowercase())
+            .or_default()
+            .insert(style.to_ascii_lowercase(), data);
+    }
+
     /// Cached fonts directory (the probe runs canonicalize up to 3x per
     /// resolve otherwise). Computed once per process.
+    /// Filesystem sources do not exist on wasm32: no env, no repo
+    /// checkout, no system fonts — fonts arrive as registered bytes.
+    #[cfg(not(target_arch = "wasm32"))]
     fn fonts_dir() -> Option<&'static PathBuf> {
         static DIR: std::sync::OnceLock<Option<PathBuf>> = std::sync::OnceLock::new();
         DIR.get_or_init(|| {
@@ -310,17 +332,38 @@ impl FontRegistry {
         .as_ref()
     }
 
-    /// Resolve a family+style to a file, checking user fonts, then the
-    /// built-in catalog, then system fonts.
+    /// The wasm32 counterpart: there is no fonts directory.
+    #[cfg(target_arch = "wasm32")]
+    fn fonts_dir() -> Option<&'static PathBuf> {
+        None
+    }
+
+    /// Resolve a family+style to a file, checking byte-registered
+    /// fonts, then user fonts, then the built-in catalog, then system
+    /// fonts.
     pub fn resolve(&mut self, family: &str, style: &str) -> Result<Resolved, RegistryError> {
         let key = family.to_ascii_lowercase();
         let style_key = style.to_ascii_lowercase();
+
+        // 0. Byte-registered fonts (browser/WASM): explicit beats
+        // everything, so the editor controls exactly which faces load.
+        if let Some(styles) = self.bytes.get(&key) {
+            if let Some(data) = styles.get(&style_key).or_else(|| styles.get("regular")) {
+                return Ok(Resolved {
+                    path: PathBuf::new(),
+                    bytes: Some(data.clone()),
+                    family: family.to_string(),
+                    substituted: false,
+                });
+            }
+        }
 
         // 1. User-registered.
         if let Some(styles) = self.user.get(&key) {
             if let Some(p) = styles.get(&style_key).or_else(|| styles.get("regular")) {
                 return Ok(Resolved {
                     path: p.clone(),
+                    bytes: None,
                     family: family.to_string(),
                     substituted: false,
                 });
@@ -343,6 +386,7 @@ impl FontRegistry {
                         if p.exists() {
                             return Ok(Resolved {
                                 path: p,
+                                bytes: None,
                                 family: e.family.to_string(),
                                 substituted: false,
                             });
@@ -366,6 +410,7 @@ impl FontRegistry {
                 {
                     return Ok(Resolved {
                         path: p.clone(),
+                        bytes: None,
                         family: family.to_string(),
                         substituted: false,
                     });
@@ -395,6 +440,7 @@ impl FontRegistry {
                         if p.exists() {
                             return Ok(Resolved {
                                 path: p,
+                                bytes: None,
                                 family: e.family.to_string(),
                                 substituted: true,
                             });
@@ -412,6 +458,7 @@ impl FontRegistry {
                     if p.exists() {
                         return Ok(Resolved {
                             path: p,
+                            bytes: None,
                             family: e.family.to_string(),
                             substituted: true,
                         });
@@ -435,6 +482,7 @@ impl FontRegistry {
                     if let Some(p) = styles.get("regular").or_else(|| styles.values().next()) {
                         return Ok(Resolved {
                             path: p.clone(),
+                            bytes: None,
                             family: probe.to_string(),
                             substituted: true,
                         });
@@ -446,14 +494,19 @@ impl FontRegistry {
         Err(RegistryError::NotFound(family.to_string()))
     }
 
-    /// Resolve and load in one step.
+    /// Resolve and load in one step. Byte-registered fonts load from
+    /// memory; paths load from the filesystem.
     pub fn load(
         &mut self,
         family: &str,
         style: &str,
     ) -> Result<(LoadedFont, Resolved), Box<dyn std::error::Error>> {
         let r = self.resolve(family, style)?;
-        let f = LoadedFont::load(&r.path)?;
+        let f = if let Some(bytes) = &r.bytes {
+            LoadedFont::from_bytes(bytes.clone())?
+        } else {
+            LoadedFont::load(&r.path)?
+        };
         Ok((f, r))
     }
 }
@@ -461,7 +514,9 @@ impl FontRegistry {
 /// Scan the platform's font directories for TTF/OTF files, keyed by
 /// family name (from the font's own name table) and style. Recurses into
 /// subdirectories (macOS keeps fonts in `Supplemental/`, X11 in
-/// `truetype/`).
+/// `truetype/`). Not compiled on wasm32: there are no system fonts in
+/// the browser.
+#[cfg(not(target_arch = "wasm32"))]
 fn scan_system_fonts() -> HashMap<String, HashMap<String, PathBuf>> {
     let mut out: HashMap<String, HashMap<String, PathBuf>> = HashMap::new();
     let roots: Vec<PathBuf> = if cfg!(target_os = "macos") {
@@ -486,6 +541,13 @@ fn scan_system_fonts() -> HashMap<String, HashMap<String, PathBuf>> {
     out
 }
 
+/// The wasm32 counterpart: no system font directories exist.
+#[cfg(target_arch = "wasm32")]
+fn scan_system_fonts() -> HashMap<String, HashMap<String, PathBuf>> {
+    HashMap::new()
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 fn scan_dir(dir: &Path, out: &mut HashMap<String, HashMap<String, PathBuf>>) {
     let Ok(entries) = std::fs::read_dir(dir) else {
         return;
@@ -516,10 +578,12 @@ fn scan_dir(dir: &Path, out: &mut HashMap<String, HashMap<String, PathBuf>>) {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 trait ExpandHome {
     fn expand_home(self) -> PathBuf;
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl ExpandHome for PathBuf {
     fn expand_home(self) -> PathBuf {
         if let Some(rest) = self.to_str().and_then(|s| s.strip_prefix('~')) {

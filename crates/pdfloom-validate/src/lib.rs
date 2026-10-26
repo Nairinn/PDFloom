@@ -56,6 +56,13 @@ impl Report {
 /// Validate a PDF file against the PDF/UA-1 machine checks.
 pub fn validate(path: impl AsRef<Path>) -> Result<Report, String> {
     let mut reader = PdfReader::open(path).map_err(|e| e.to_string())?;
+    validate_reader(&mut reader)
+}
+
+/// Validate a PDF from an open reader (in-memory bytes or file): the
+/// browser/WASM path opens with `PdfReader::from_bytes` and reuses
+/// every check unchanged.
+pub fn validate_reader(reader: &mut PdfReader) -> Result<Report, String> {
     let mut findings: Vec<Finding> = Vec::new();
     let mut review: Vec<&'static str> = Vec::new();
 
@@ -217,11 +224,11 @@ pub fn validate(path: impl AsRef<Path>) -> Result<Report, String> {
             for kid in root_kids {
                 match kid {
                     Object::Ref(r) => {
-                        walk_element(&mut reader, r.id, &mut findings, &mut review)?;
+                        walk_element(reader, r.id, &mut findings, &mut review)?;
                     }
                     // Direct dict child: walk it in place.
                     Object::Dict(d) => {
-                        walk_dict(&mut reader, &d, 0, &mut findings, &mut review)?;
+                        walk_dict(reader, &d, 0, &mut findings, &mut review)?;
                     }
                     _ => {}
                 }
@@ -238,7 +245,7 @@ pub fn validate(path: impl AsRef<Path>) -> Result<Report, String> {
             let Object::Dict(pd) = obj else { continue };
             if let Some(Object::Array(annots)) = pd.get("Annots").cloned() {
                 for a in annots {
-                    check_annotation(&mut reader, &a, &mut findings);
+                    check_annotation(reader, &a, &mut findings);
                 }
             }
         }

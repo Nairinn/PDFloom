@@ -192,9 +192,16 @@ fn find_emc(content: &[u8], from: usize) -> usize {
 }
 
 impl TagSession {
-    /// Open a PDF and extract its text runs (all tagged `P` by default).
+    /// Open a PDF from a file and extract its text runs (all tagged `P`
+    /// by default).
     pub fn open(path: &str) -> Result<Self, Box<dyn std::error::Error>> {
-        let mut reader = PdfReader::open(path)?;
+        Self::from_bytes(std::fs::read(path)?)
+    }
+
+    /// Open a PDF from in-memory bytes (the browser path) and extract
+    /// its text runs.
+    pub fn from_bytes(data: Vec<u8>) -> Result<Self, Box<dyn std::error::Error>> {
+        let mut reader = PdfReader::from_bytes(data)?;
         let mut runs = Vec::new();
 
         // Walk the page tree (pages() resolves the catalog internally).
@@ -305,11 +312,41 @@ impl TagSession {
         lang: &str,
         path: &str,
     ) -> Result<SaveReport, Box<dyn std::error::Error>> {
+        let (bytes, report) = self.build(profile, title, lang)?;
+        std::fs::write(path, bytes)?;
+        Ok(report)
+    }
+
+    /// Build the newly tagged document in memory and return
+    /// `(pdf_bytes, report)`; `save()` writes those bytes to disk.
+    pub fn build(
+        &mut self,
+        profile: Profile,
+        title: &str,
+        lang: &str,
+    ) -> Result<(Vec<u8>, SaveReport), Box<dyn std::error::Error>> {
+        self.build_with(profile, title, lang, |_| {})
+    }
+
+    /// Like [`build`](Self::build), but `setup` runs against the fresh
+    /// [`Document`](crate::Document) first. The browser engine uses
+    /// this to register in-memory fonts before the default face loads.
+    pub fn build_with<F>(
+        &mut self,
+        profile: Profile,
+        title: &str,
+        lang: &str,
+        setup: F,
+    ) -> Result<(Vec<u8>, SaveReport), Box<dyn std::error::Error>>
+    where
+        F: FnOnce(&mut Document),
+    {
         // Rebuild via the writer: emit a document whose pages carry the
         // original content streams, but wrapped in our own marked content.
         // M2 scope: we re-emit extracted text as fresh tagged content.
         let mut doc = Document::new(profile);
         doc.title(title).lang(lang);
+        setup(&mut doc);
         // Registry default: bundled Liberation Sans on any platform (the
         // catalog fallbacks handle systems without it).
         doc.font("Liberation Sans", "Regular")?;
@@ -335,8 +372,8 @@ impl TagSession {
         }
         drop(flow);
 
-        let report = doc.save(path)?;
-        Ok(report)
+        let (bytes, report) = doc.to_bytes()?;
+        Ok((bytes, report))
     }
 }
 

@@ -303,14 +303,39 @@ pub fn parse_def(json: &[u8]) -> Result<DocumentDef, DefError> {
     Ok(def)
 }
 
-/// Build the PDF described by `def` at `out_path`. Returns the save
-/// report (never blocks: a non-compliant file is written and reported).
-pub fn build_to_file(
+/// Build the PDF described by `def` in memory and return
+/// `(bytes, save_report)`; `build_to_file` writes those bytes to disk.
+/// Nothing in this path touches the filesystem, so the same call runs
+/// in the browser (WASM) unchanged.
+pub fn build_to_bytes(
     def: &DocumentDef,
-    out_path: &str,
-) -> Result<pdfloom_profile::SaveReport, DefError> {
+) -> Result<(Vec<u8>, pdfloom_profile::SaveReport), DefError> {
+    build_to_bytes_with(def, |_| {})
+}
+
+/// Like [`build_to_bytes`], but `setup` runs against the fresh
+/// [`pdfloom::Document`] before any element is built. The browser
+/// engine uses this to register in-memory fonts:
+///
+/// ```no_run
+/// # fn main() -> Result<(), pdfloom_def::DefError> {
+/// # let def: pdfloom_def::DocumentDef = todo!();
+/// pdfloom_def::build_to_bytes_with(&def, |doc| {
+///     doc.register_font_bytes("Liberation Sans", "Regular", vec![/* ttf bytes */]);
+/// })?;
+/// # Ok(())
+/// # }
+/// ```
+pub fn build_to_bytes_with<F>(
+    def: &DocumentDef,
+    setup: F,
+) -> Result<(Vec<u8>, pdfloom_profile::SaveReport), DefError>
+where
+    F: FnOnce(&mut pdfloom::Document),
+{
     let mut doc = pdfloom::Document::new(def.profile.into());
     doc.title(&def.title).lang(&def.lang);
+    setup(&mut doc);
     doc.ensure_default_font();
 
     // Resolve one font handle per (family, style); size and color are
@@ -360,9 +385,20 @@ pub fn build_to_file(
         }
     }
 
-    let report = doc
-        .save(out_path)
+    let (bytes, report) = doc
+        .to_bytes()
         .map_err(|e| DefError::Build(e.to_string()))?;
+    Ok((bytes, report))
+}
+
+/// Build the PDF described by `def` at `out_path`. Returns the save
+/// report (never blocks: a non-compliant file is written and reported).
+pub fn build_to_file(
+    def: &DocumentDef,
+    out_path: &str,
+) -> Result<pdfloom_profile::SaveReport, DefError> {
+    let (bytes, report) = build_to_bytes(def)?;
+    std::fs::write(out_path, bytes).map_err(DefError::Io)?;
     Ok(report)
 }
 
@@ -795,27 +831,15 @@ fn hex_rgb(color: &str) -> Result<(f64, f64, f64), DefError> {
 }
 
 /// Load an image from a path or `data:image/...;base64,...` URL.
+/// Data URLs decode straight from memory (no temp file, no clock); the
+/// browser path uses them exclusively, so nothing here touches the
+/// filesystem unless the config names a real path (native only).
 fn load_image(src: &str) -> Result<pdfloom::Image, DefError> {
     if let Some(rest) = src.strip_prefix("data:") {
         let b64 = rest.split(',').nth(1).unwrap_or("");
         let bytes = decode_base64(b64)
             .ok_or_else(|| DefError::Build("invalid base64 image data".into()))?;
-        // Image::load reads from a path; write the decoded bytes to a
-        // short-lived temp file. The decode happens eagerly, so the
-        // file can go right after.
-        let tmp = std::env::temp_dir().join(format!(
-            "pdfloom-def-img-{}",
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .map_or(0, |d| d.as_nanos())
-        ));
-        std::fs::write(&tmp, bytes)?;
-        let img = pdfloom::Image::load(
-            tmp.to_str()
-                .ok_or_else(|| DefError::Build("temp path not UTF-8".into()))?,
-        );
-        let _ = std::fs::remove_file(&tmp);
-        img.map_err(|e| DefError::Build(e.to_string()))
+        pdfloom::Image::from_bytes(bytes).map_err(|e| DefError::Build(e.to_string()))
     } else {
         pdfloom::Image::load(src).map_err(|e| DefError::Build(e.to_string()))
     }
