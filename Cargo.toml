@@ -20,6 +20,7 @@ members = [
     "crates/pdfloom-def",
     "crates/pdfloom-server",
     "crates/pdfloom-wasm",
+    "crates/pdfloom-parity-runner",
 ]
 exclude = ["fuzz"]
 

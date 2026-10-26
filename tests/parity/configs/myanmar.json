@@ -1,0 +1,69 @@
+{
+  "format": "pdfloom-doc",
+  "version": 1,
+  "profile": "ua1",
+  "title": "Myanmar shaping parity",
+  "lang": "my-MM",
+  "pages": [
+    {
+      "size": [
+        612,
+        792
+      ],
+      "elements": [
+        {
+          "type": "heading",
+          "level": 1,
+          "text": "Myanmar shaping parity",
+          "rect": [
+            72,
+            680,
+            468,
+            28
+          ],
+          "font": {
+            "family": "Liberation Sans",
+            "style": "Bold",
+            "size": 18,
+            "color": "#000000"
+          },
+          "order": 1
+        },
+        {
+          "type": "paragraph",
+          "text": "ကင်ဂဋာပြက မြန်မြက",
+          "rect": [
+            72,
+            600,
+            468,
+            60
+          ],
+          "font": {
+            "family": "Noto Sans Myanmar",
+            "style": "Regular",
+            "size": 14,
+            "color": "#000000"
+          },
+          "order": 2
+        },
+        {
+          "type": "paragraph",
+          "text": "မြန်မြက ထဝဲင်း အောက္",
+          "rect": [
+            72,
+            520,
+            468,
+            60
+          ],
+          "font": {
+            "family": "Noto Sans Myanmar",
+            "style": "Regular",
+            "size": 14,
+            "color": "#000000"
+          },
+          "order": 3
+        }
+      ]
+    }
+  ]
+}

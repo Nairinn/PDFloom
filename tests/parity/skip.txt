@@ -1,0 +1,7 @@
+# Native-vs-WASM parity skip list (name | reason), mirroring
+# tests/verapdf-skip.txt. Every entry is reviewed; the harness FAILS on
+# a stale entry (a fixture that no longer exists).
+#
+# No permanent skips today. The CJK fixture is skipped at runtime when
+# the optional Noto Sans CJK JP faces are not fetched
+# (scripts/fetch-cjk-fonts.sh), with the reason printed in the log.

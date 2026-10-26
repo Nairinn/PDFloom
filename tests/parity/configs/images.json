@@ -1,0 +1,76 @@
+{
+  "format": "pdfloom-doc",
+  "version": 1,
+  "profile": "ua1",
+  "title": "Images parity",
+  "lang": "en-US",
+  "pages": [
+    {
+      "size": [
+        612,
+        792
+      ],
+      "elements": [
+        {
+          "type": "heading",
+          "level": 1,
+          "text": "Images parity",
+          "rect": [
+            72,
+            680,
+            468,
+            28
+          ],
+          "font": {
+            "family": "Liberation Sans",
+            "style": "Bold",
+            "size": 18,
+            "color": "#000000"
+          },
+          "order": 1
+        },
+        {
+          "type": "image",
+          "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAHklEQVR4nGM8IafxnwE3aGTCIwkGQ0IBC8gr+FQAAKUdAyEPXmkRAAAAAElFTkSuQmCC",
+          "alt": "A red square with a transparent corner",
+          "rect": [
+            72,
+            560,
+            96,
+            96
+          ],
+          "order": 2
+        },
+        {
+          "type": "image",
+          "src": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/wAALCAAQABABAREA/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/9oACAEBAAA/APnXwdpv3Plr2fwdpv3PlrjPB2m/c+WvZvB2m/c+Wv/Z",
+          "alt": "A gradient embedded as JPEG",
+          "rect": [
+            200,
+            560,
+            96,
+            96
+          ],
+          "order": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "One PNG with an alpha channel and one JPEG, both inlined as data URLs.",
+          "rect": [
+            72,
+            480,
+            468,
+            60
+          ],
+          "font": {
+            "family": "Liberation Sans",
+            "style": "Regular",
+            "size": 11,
+            "color": "#000000"
+          },
+          "order": 4
+        }
+      ]
+    }
+  ]
+}

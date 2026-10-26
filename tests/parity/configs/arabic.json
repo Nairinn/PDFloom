@@ -1,0 +1,86 @@
+{
+  "format": "pdfloom-doc",
+  "version": 1,
+  "profile": "ua1",
+  "title": "Arabic shaping parity",
+  "lang": "ar-EG",
+  "pages": [
+    {
+      "size": [
+        612,
+        792
+      ],
+      "elements": [
+        {
+          "type": "heading",
+          "level": 1,
+          "text": "Arabic shaping parity",
+          "rect": [
+            72,
+            680,
+            468,
+            28
+          ],
+          "font": {
+            "family": "Liberation Sans",
+            "style": "Bold",
+            "size": 18,
+            "color": "#000000"
+          },
+          "order": 1
+        },
+        {
+          "type": "paragraph",
+          "text": "السلام عليكم و مرحبا بالعالم",
+          "rect": [
+            72,
+            600,
+            468,
+            60
+          ],
+          "font": {
+            "family": "Noto Sans Arabic",
+            "style": "Regular",
+            "size": 14,
+            "color": "#000000"
+          },
+          "order": 2
+        },
+        {
+          "type": "paragraph",
+          "text": "مرحبا 2026 السلام مرحبا 7 مرحبا",
+          "rect": [
+            72,
+            520,
+            468,
+            60
+          ],
+          "font": {
+            "family": "Noto Sans Arabic",
+            "style": "Regular",
+            "size": 14,
+            "color": "#000000"
+          },
+          "order": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "مرحبا 2026 وعدد 7 داخل نص عربي",
+          "rect": [
+            72,
+            460,
+            468,
+            40
+          ],
+          "order": 4,
+          "font": {
+            "family": "Noto Sans Arabic",
+            "style": "Regular",
+            "size": 12,
+            "color": "#000000"
+          }
+        }
+      ]
+    }
+  ]
+}

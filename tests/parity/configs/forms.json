@@ -1,0 +1,89 @@
+{
+  "format": "pdfloom-doc",
+  "version": 1,
+  "profile": "ua1",
+  "title": "Forms parity",
+  "lang": "en-US",
+  "pages": [
+    {
+      "size": [
+        612,
+        792
+      ],
+      "elements": [
+        {
+          "type": "heading",
+          "level": 1,
+          "text": "Forms parity",
+          "rect": [
+            72,
+            680,
+            468,
+            28
+          ],
+          "font": {
+            "family": "Liberation Sans",
+            "style": "Bold",
+            "size": 18,
+            "color": "#000000"
+          },
+          "order": 1
+        },
+        {
+          "type": "form_field",
+          "label": "Full name",
+          "name": "full_name",
+          "rect": [
+            72,
+            600,
+            468,
+            24
+          ],
+          "order": 2,
+          "font": {
+            "family": "Liberation Sans",
+            "style": "Regular",
+            "size": 11,
+            "color": "#000000"
+          }
+        },
+        {
+          "type": "form_field",
+          "label": "Email address",
+          "name": "email",
+          "rect": [
+            72,
+            560,
+            468,
+            24
+          ],
+          "order": 3,
+          "font": {
+            "family": "Liberation Sans",
+            "style": "Regular",
+            "size": 11,
+            "color": "#000000"
+          }
+        },
+        {
+          "type": "form_field",
+          "label": "Date of birth",
+          "name": "dob",
+          "rect": [
+            72,
+            520,
+            240,
+            24
+          ],
+          "order": 4,
+          "font": {
+            "family": "Liberation Sans",
+            "style": "Regular",
+            "size": 11,
+            "color": "#000000"
+          }
+        }
+      ]
+    }
+  ]
+}

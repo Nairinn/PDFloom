@@ -1,0 +1,649 @@
+{
+  "profile": "ua1",
+  "title": "Streaming parity",
+  "lang": "en-US",
+  "events": [
+    {
+      "type": "begin",
+      "tag": "H1",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 0: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 1: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 2: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 3: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 4: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 5: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 6: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 7: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 8: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 9: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "H2",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 10: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "pagebreak"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 11: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 12: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 13: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 14: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 15: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 16: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 17: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 18: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 19: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "H2",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 20: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "pagebreak"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 21: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 22: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 23: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 24: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 25: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 26: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 27: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 28: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 29: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "H2",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 30: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "pagebreak"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 31: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 32: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 33: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 34: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 35: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 36: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 37: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 38: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 39: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "begin",
+      "tag": "H2",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 40: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    },
+    {
+      "type": "pagebreak"
+    },
+    {
+      "type": "begin",
+      "tag": "P",
+      "alt": null,
+      "attrs": null
+    },
+    {
+      "type": "text",
+      "text": "Streaming parity section 41: the quick brown fox jumps over the lazy dog, with enough text to wrap across several lines on the page.",
+      "font": 0,
+      "size": 11.0
+    },
+    {
+      "type": "end"
+    }
+  ]
+}

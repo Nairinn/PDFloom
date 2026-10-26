@@ -1,0 +1,14 @@
+[package]
+name = "pdfloom-parity-runner"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Native side of the native-vs-WASM parity fixtures (dev-only)"
+publish = false
+
+[dependencies]
+pdfloom = { path = "../pdfloom", version = "0.1.0" }
+serde_json = { workspace = true }
+
+[lints]
+workspace = true

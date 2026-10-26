@@ -1,0 +1,69 @@
+{
+  "format": "pdfloom-doc",
+  "version": 1,
+  "profile": "ua1",
+  "title": "CJK shaping parity",
+  "lang": "ja-JP",
+  "pages": [
+    {
+      "size": [
+        612,
+        792
+      ],
+      "elements": [
+        {
+          "type": "heading",
+          "level": 1,
+          "text": "CJK shaping parity",
+          "rect": [
+            72,
+            680,
+            468,
+            28
+          ],
+          "font": {
+            "family": "Liberation Sans",
+            "style": "Bold",
+            "size": 18,
+            "color": "#000000"
+          },
+          "order": 1
+        },
+        {
+          "type": "paragraph",
+          "text": "日本語のタイプセットをまたいで同じバイトを生成すること。",
+          "rect": [
+            72,
+            600,
+            468,
+            60
+          ],
+          "font": {
+            "family": "Noto Sans CJK JP",
+            "style": "Regular",
+            "size": 14,
+            "color": "#000000"
+          },
+          "order": 2
+        },
+        {
+          "type": "paragraph",
+          "text": "同じ設定で何度ぶっても同じ結果になることを確詍する。",
+          "rect": [
+            72,
+            520,
+            468,
+            60
+          ],
+          "font": {
+            "family": "Noto Sans CJK JP",
+            "style": "Regular",
+            "size": 14,
+            "color": "#000000"
+          },
+          "order": 3
+        }
+      ]
+    }
+  ]
+}

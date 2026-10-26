@@ -1,0 +1,85 @@
+{
+  "format": "pdfloom-doc",
+  "version": 1,
+  "profile": "ua1",
+  "title": "Artifacts parity",
+  "lang": "en-US",
+  "pages": [
+    {
+      "size": [
+        612,
+        792
+      ],
+      "elements": [
+        {
+          "type": "rect",
+          "rect": [
+            0,
+            756,
+            612,
+            36
+          ],
+          "fill": "#1a3a5c",
+          "stroke": null,
+          "stroke_width": 1,
+          "order": 900
+        },
+        {
+          "type": "line",
+          "rect": [
+            36,
+            36,
+            540,
+            1
+          ],
+          "from": [
+            36,
+            36.5
+          ],
+          "to": [
+            576,
+            36.5
+          ],
+          "stroke": "#888888",
+          "stroke_width": 0.8,
+          "order": 901
+        },
+        {
+          "type": "heading",
+          "level": 1,
+          "text": "Artifacts parity",
+          "rect": [
+            72,
+            700,
+            468,
+            28
+          ],
+          "font": {
+            "family": "Liberation Sans",
+            "style": "Bold",
+            "size": 18,
+            "color": "#000000"
+          },
+          "order": 1
+        },
+        {
+          "type": "paragraph",
+          "text": "The header band and the footer rule are decorations: they paint as artifacts and never enter the structure tree or the reading order.",
+          "rect": [
+            72,
+            620,
+            468,
+            60
+          ],
+          "font": {
+            "family": "Liberation Sans",
+            "style": "Regular",
+            "size": 11,
+            "color": "#000000"
+          },
+          "order": 2
+        }
+      ]
+    }
+  ]
+}

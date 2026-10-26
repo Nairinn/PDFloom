@@ -1,0 +1,69 @@
+{
+  "format": "pdfloom-doc",
+  "version": 1,
+  "profile": "ua1",
+  "title": "Thai shaping parity",
+  "lang": "th-TH",
+  "pages": [
+    {
+      "size": [
+        612,
+        792
+      ],
+      "elements": [
+        {
+          "type": "heading",
+          "level": 1,
+          "text": "Thai shaping parity",
+          "rect": [
+            72,
+            680,
+            468,
+            28
+          ],
+          "font": {
+            "family": "Liberation Sans",
+            "style": "Bold",
+            "size": 18,
+            "color": "#000000"
+          },
+          "order": 1
+        },
+        {
+          "type": "paragraph",
+          "text": "สวัสดี กรุณาเข้าสู่ระบบพิมพ์ภาษาไทย",
+          "rect": [
+            72,
+            600,
+            468,
+            60
+          ],
+          "font": {
+            "family": "Noto Sans Thai",
+            "style": "Regular",
+            "size": 14,
+            "color": "#000000"
+          },
+          "order": 2
+        },
+        {
+          "type": "paragraph",
+          "text": "เอกสารพิมพ์ที่เป็นพร้อมสระอีกหลักเสียง",
+          "rect": [
+            72,
+            520,
+            468,
+            60
+          ],
+          "font": {
+            "family": "Noto Sans Thai",
+            "style": "Regular",
+            "size": 14,
+            "color": "#000000"
+          },
+          "order": 3
+        }
+      ]
+    }
+  ]
+}
