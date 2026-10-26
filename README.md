@@ -180,18 +180,38 @@ The two Noto Sans CJK JP faces (16 MB each) are not committed. Fetch them
 with `bash scripts/fetch-cjk-fonts.sh`. CI fetches them automatically;
 the CJK tests skip when they are absent.
 
-## Fonts in packaged installs
+## Fonts that work everywhere
 
-Bundled fonts live in `fonts/vendor/` at the repo root, outside any crate
-directory, so crate packages never ship them (crates.io caps packages at
-10 MB). Resolution order at runtime:
+`cargo add pdfloom` works with no font setup: the default
+`bundled-fonts` feature pulls `pdfloom-fonts-data`, which embeds every
+non-CJK vendored face (Liberation, Noto including Myanmar/Thai/Arabic,
+Atkinson Hyperlegible, OpenDyslexic — 5.8 MB compressed, OFL licenses
+shipped inside the package). Disable default features for a lean build.
 
-1. `PDFLOOM_FONTS_DIR` (build-time env var, relocated installs)
-2. The repo checkout (`fonts/` relative to the workspace)
-3. System fonts by family name
-4. A bundled look-alike, with a substitution note in the save report
-5. Any system sans-serif, flagged as substituted, so the save always
-   succeeds
+Resolution order at runtime:
+
+1. `PDFLOOM_FONTS_DIR` (env var, relocated installs)
+2. The repo checkout (`fonts/` relative to the workspace, dev only)
+3. Embedded fonts from `pdfloom-fonts-data` (the default feature)
+4. The per-user downloaded-font cache (`pdfloom fonts install cjk`)
+5. System fonts by family name
+6. A bundled look-alike, then any system sans-serif, with a
+   substitution note in the save report
+
+The two Noto Sans CJK JP faces are 16 MB each and never embed. When a
+document needs them and they are missing, the save report names the
+fix:
+
+```
+pdfloom fonts install cjk                 # from the notofonts releases
+pdfloom fonts install cjk --base https://pdfloom-studio.<sub>.workers.dev
+                                          # from the deployed Studio
+```
+
+Downloads are SHA-256 verified against hashes compiled into the binary
+and stored in the per-user cache dir. Only this command touches the
+network; builds, tests and saves never do. The Python binding exposes
+the same thing: `pdfloom.install_cjk_fonts()`.
 
 ## Internals
 

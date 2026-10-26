@@ -8,19 +8,27 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# Dependency order: every crate's internal dependencies must already
+# be on crates.io when its turn comes. (pdfloom-def deliberately builds
+# against pdfloom with default-features = false so the browser engine
+# does not pull the embedded fonts; the CLI re-enables them.)
 CRATES=(
     pdfloom-core
-    pdfloom-font
     pdfloom-parse
+    pdfloom-font
+    pdfloom-fonts
+    pdfloom-fonts-data
     pdfloom-canvas
     pdfloom-profile
-    pdfloom-fonts
     pdfloom-validate
     pdfloom-revision
-    pdfloom-draw
     pdfloom-render
     pdfloom
+    pdfloom-def
+    pdfloom-draw
     pdfloom-api
+    pdfloom-cli
+    pdfloom-server
 )
 
 if [ "${1:-}" = "--dry-run" ]; then

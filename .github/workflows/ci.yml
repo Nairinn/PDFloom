@@ -115,6 +115,13 @@ jobs:
             --out-dir pkg-nodejs --out-name pdfloom
           node scripts/wasm-parity.mjs
 
+      # The crates.io story: the fonts-data .crate must physically carry
+      # the fonts, the sandbox library must build outside the repo, and a
+      # clean patched project must produce a compliant Myanmar + Arabic +
+      # Thai PDF with zero substitution notes. veraPDF validates it.
+      - name: Packaged-crate verification (embedded fonts, no env)
+        run: bash scripts/test-packaged-crate.sh
+
       - name: Install veraPDF (pinned to 1.30.2)
         run: |
           mkdir -p tools/verapdf
