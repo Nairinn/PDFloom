@@ -256,10 +256,17 @@ pub struct FontRegistry {
     /// User-registered in-memory fonts (browser/WASM): family name
     /// (lowercased) → bytes by style. Checked before everything else.
     bytes: HashMap<String, HashMap<String, Vec<u8>>>,
+    /// Fonts embedded by pdfloom-fonts-data (the `bundled-fonts`
+    /// tier): family (lowercased) → bytes by style. Checked after the
+    /// env/repo fonts_dir catalog, before any system lookup.
+    embedded: HashMap<String, HashMap<String, &'static [u8]>>,
     /// User-registered: family name (lowercased) → paths by style.
     user: HashMap<String, HashMap<String, PathBuf>>,
     /// System scan cache: family → paths by style.
     system: Option<HashMap<String, HashMap<String, PathBuf>>>,
+    /// Downloaded-font cache scan (the `fonts install` tier), same
+    /// shape as the system scan; probed lazily once.
+    cache: Option<HashMap<String, HashMap<String, PathBuf>>>,
 }
 
 impl FontRegistry {
@@ -295,6 +302,37 @@ impl FontRegistry {
             .entry(family.to_ascii_lowercase())
             .or_default()
             .insert(style.to_ascii_lowercase(), data);
+    }
+
+    /// Register a font embedded by `pdfloom-fonts-data` (the
+    /// `bundled-fonts` tier). Embedded fonts sit between the env/repo
+    /// fonts_dir catalog and the system fonts in the resolution order,
+    /// so explicit developer overrides still win.
+    pub fn register_embedded(&mut self, family: &str, style: &str, data: &'static [u8]) {
+        self.embedded
+            .entry(family.to_ascii_lowercase())
+            .or_default()
+            .insert(style.to_ascii_lowercase(), data);
+    }
+
+    /// The per-user downloaded-font cache directory (populated by
+    /// `pdfloom fonts install cjk`). `None` when the platform has no
+    /// conventional cache location.
+    #[must_use]
+    pub fn cache_dir() -> Option<std::path::PathBuf> {
+        static DIR: std::sync::OnceLock<Option<std::path::PathBuf>> = std::sync::OnceLock::new();
+        DIR.get_or_init(|| {
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                directories::ProjectDirs::from("", "", "pdfloom")
+                    .map(|d| d.cache_dir().join("fonts"))
+            }
+            #[cfg(target_arch = "wasm32")]
+            {
+                None
+            }
+        })
+        .clone()
     }
 
     /// Cached fonts directory (the probe runs canonicalize up to 3x per
@@ -392,6 +430,42 @@ impl FontRegistry {
                             });
                         }
                     }
+                }
+            }
+        }
+
+        // 3.5 Embedded fonts (pdfloom-fonts-data / the `bundled-fonts`
+        // feature): packaged installs work with no fonts on the machine,
+        // but env/repo fonts still win, so developer overrides hold.
+        if let Some(styles) = self.embedded.get(&key) {
+            if let Some(data) = styles.get(&style_key).or_else(|| styles.get("regular")) {
+                return Ok(Resolved {
+                    path: PathBuf::new(),
+                    bytes: Some(data.to_vec()),
+                    family: family.to_string(),
+                    substituted: false,
+                });
+            }
+        }
+
+        // 3.6 The per-user downloaded-font cache (`pdfloom fonts install
+        // cjk` writes there, SHA-256 verified). Scanned lazily, once.
+        if self.cache.is_none() {
+            self.cache = Some(scan_dir_by_family(&Self::cache_dir()));
+        }
+        if let Some(cached) = self.cache.as_ref() {
+            if let Some(styles) = cached.get(&key) {
+                if let Some(p) = styles
+                    .get(&style_key)
+                    .or_else(|| styles.get("regular"))
+                    .or_else(|| styles.values().next())
+                {
+                    return Ok(Resolved {
+                        path: p.clone(),
+                        bytes: None,
+                        family: family.to_string(),
+                        substituted: false,
+                    });
                 }
             }
         }
@@ -511,6 +585,20 @@ impl FontRegistry {
     }
 }
 
+/// Index every font file under `dir` (recursively) by family/style
+/// from each font's own name table — the downloaded-font cache shape.
+/// `None` (no conventional cache dir) yields an empty index.
+fn scan_dir_by_family(
+    dir: &Option<std::path::PathBuf>,
+) -> HashMap<String, HashMap<String, PathBuf>> {
+    let mut out: HashMap<String, HashMap<String, PathBuf>> = HashMap::new();
+    if let Some(d) = dir {
+        #[cfg(not(target_arch = "wasm32"))]
+        scan_dir(d, &mut out);
+    }
+    out
+}
+
 /// Scan the platform's font directories for TTF/OTF files, keyed by
 /// family name (from the font's own name table) and style. Recurses into
 /// subdirectories (macOS keeps fonts in `Supplemental/`, X11 in
@@ -604,5 +692,58 @@ fn style_matches(want: &str, have: &str) -> bool {
         "italic" => have.eq_ignore_ascii_case("italic") || have.eq_ignore_ascii_case("bold italic"),
         "bold italic" => have.eq_ignore_ascii_case("bold italic"),
         other => have.to_ascii_lowercase().contains(other),
+    }
+}
+
+#[cfg(test)]
+mod embedded_and_cache_tiers {
+    use super::FontRegistry;
+
+    #[test]
+    fn embedded_tier_resolves_bytes() {
+        let mut r = FontRegistry::new();
+        r.register_embedded("TestOnly Face", "Regular", b"fake-font-bytes");
+        let resolved = r
+            .resolve("TestOnly Face", "Regular")
+            .expect("embedded tier");
+        assert_eq!(resolved.bytes.as_deref(), Some(&b"fake-font-bytes"[..]));
+        assert!(resolved.path.as_os_str().is_empty());
+        assert!(!resolved.substituted);
+    }
+
+    #[test]
+    fn embedded_tier_is_below_explicit_bytes() {
+        let mut r = FontRegistry::new();
+        r.register_embedded("Face", "Regular", b"embedded");
+        r.register_bytes("Face", "Regular", b"explicit".to_vec());
+        let resolved = r.resolve("Face", "Regular").expect("resolves");
+        assert_eq!(resolved.bytes.as_deref(), Some(&b"explicit"[..]));
+    }
+
+    #[test]
+    fn cache_dir_scan_finds_fonts() {
+        // A temp cache dir with one probe-able TTF (the real Liberation
+        // Sans Regular, copied in) must be indexed by family+style.
+        let dir = std::env::temp_dir().join(format!(
+            "pdfloom-cache-test-{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map_or(0, |d| d.as_nanos())
+        ));
+        std::fs::create_dir_all(&dir).unwrap();
+        let src = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../fonts/vendor/liberation/LiberationSans-Regular.ttf"
+        );
+        std::fs::copy(src, dir.join("LiberationSans-Regular.ttf")).unwrap();
+        let scanned = super::scan_dir_by_family(&Some(dir.clone()));
+        let styles = scanned.get("liberation sans").expect("family indexed");
+        assert!(styles.contains_key("regular"), "styles: {styles:?}");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn none_cache_dir_scans_empty() {
+        assert!(super::scan_dir_by_family(&None).is_empty());
     }
 }

@@ -1,0 +1,12 @@
+[package]
+name = "pdfloom-fonts-data"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Embedded OFL fonts for PDFloom: cargo add works with no font setup"
+categories = ["text-processing"]
+keywords = ["pdf", "fonts", "accessibility", "ofl"]
+
+[lints]
+workspace = true

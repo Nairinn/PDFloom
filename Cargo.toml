@@ -21,6 +21,7 @@ members = [
     "crates/pdfloom-server",
     "crates/pdfloom-wasm",
     "crates/pdfloom-parity-runner",
+    "crates/pdfloom-fonts-data",
 ]
 exclude = ["fuzz"]
 

@@ -1,6 +1,8 @@
 [package]
 name = "pdfloom-fonts"
 description = "Font registry: built-in catalog, system fonts, name resolution and fallback"
+categories = ["text-processing"]
+keywords = ["pdf", "pdfua", "accessibility", "tagged", "unicode"]
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -10,6 +12,11 @@ rust-version.workspace = true
 [dependencies]
 pdfloom-font = { workspace = true }
 thiserror = "2"
+
+# Per-user font cache location for `pdfloom fonts install`. Native
+# only: the browser engine never looks at the cache.
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+directories = "6"
 
 [lints]
 workspace = true
