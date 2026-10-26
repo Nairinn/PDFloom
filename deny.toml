@@ -26,6 +26,27 @@ allow = [
 # not compiled dependencies; they appear in font manifests, not Cargo metadata.
 confidence-threshold = 0.93
 
+# Scoped per-crate exceptions. MPL-2.0 is NOT globally allowed: it is a
+# file-level copyleft, but these specific crates are consumed unmodified
+# as build/dev-time dependencies of the optional Kotlin/Java bindings
+# (pdfloom-uniffi) only. Distributing PDFloom under MIT alongside an
+# unmodified MPL-2.0 dependency is compatible (the MPL obligations
+# apply to those crates' own files, not to our MIT code linking them),
+# so the exceptions are name-scoped and each is reachable only from
+# the bindings crates — the deny job asserts that neither pdfloom (the
+# core API) nor pdfloom-wasm has any of them in its tree.
+exceptions = [
+    { name = "uniffi", allow = ["MPL-2.0"] },
+    { name = "uniffi_bindgen", allow = ["MPL-2.0"] },
+    { name = "uniffi_build", allow = ["MPL-2.0"] },
+    { name = "uniffi_core", allow = ["MPL-2.0"] },
+    { name = "uniffi_internal_macros", allow = ["MPL-2.0"] },
+    { name = "uniffi_macros", allow = ["MPL-2.0"] },
+    { name = "uniffi_meta", allow = ["MPL-2.0"] },
+    { name = "uniffi_pipeline", allow = ["MPL-2.0"] },
+    { name = "uniffi_udl", allow = ["MPL-2.0"] },
+]
+
 [bans]
 multiple-versions = "warn"
 # Copyleft: the whole point of this project is a clean MIT library.
@@ -40,3 +61,21 @@ deny = [
 [advisories]
 version = 2
 yanked = "warn"
+# Scoped, reviewed ignores. Every entry names why the advisory does not
+# block this project, and each is revisited before a release.
+ignore = [
+    # Build-time tooling of the optional Kotlin/Java bindings; the crate
+    # is not linked into any shipped binary or library.
+    { id = "RUSTSEC-2026-0374", reason = "basic-toml unmaintained: build-dep of uniffi_build/askama (bindings tooling only), not shipped" },
+    # The vulnerable pyo3 APIs are not used anywhere in pdfloom-py
+    # (verified: no from_object / new_closure call sites). Revisit at
+    # the pyo3 0.29 migration before the PyPI release.
+    { id = "RUSTSEC-2025-0020", reason = "pyo3 PyString::from_object: API unused by pdfloom-py; upgrade pyo3 before publishing the wheel" },
+    { id = "RUSTSEC-2026-0177", reason = "pyo3 PyCFunction::new_closure: API unused by pdfloom-py; upgrade pyo3 before publishing the wheel" },
+    # The shaping stack. rustybuzz (the HarfBuzz port) and ttf-parser
+    # have no maintained drop-in replacements; the behavior we depend
+    # on is pinned by the byte-identity parity suite and the veraPDF
+    # gate on both the native and WASM paths.
+    { id = "RUSTSEC-2026-0206", reason = "rustybuzz unmaintained: core shaping engine, no drop-in replacement; byte-identity parity + veraPDF gate pin the behavior" },
+    { id = "RUSTSEC-2026-0192", reason = "ttf-parser unmaintained: core font parsing, no drop-in replacement; byte-identity parity + veraPDF gate pin the behavior" },
+]

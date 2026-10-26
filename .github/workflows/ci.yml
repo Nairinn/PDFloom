@@ -42,6 +42,34 @@ jobs:
           grep -vE '^(feat|fix|docs|chore|refactor|test|style|perf|build|ci|revert)(\(.+\))?: .+$' |
           grep -q . && { echo "Non-conventional commit subjects found:"; git log --format='%s' "$RANGE" | grep -vE '^(feat|fix|docs|chore|refactor|test|style|perf|build|ci|revert)(\(.+\))?: .+$' | head; exit 1; } || echo "commit style OK"
 
+  deny:
+    name: cargo deny (licenses, bans, advisories)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: License / ban / advisory gate
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          arguments: --workspace --exclude pdfloom-py
+
+      # The MPL-2.0 exceptions in deny.toml are scoped to the uniffi
+      # crates of the optional bindings. If any of them ever reaches
+      # the core API or the browser engine, that is a design bug: this
+      # guard fails the build instead of relying on review alone.
+      - name: MPL crates must not reach pdfloom or pdfloom-wasm
+        run: |
+          if cargo tree -e normal -p pdfloom --target wasm32-unknown-unknown | grep -i uniffi; then
+            echo "pdfloom's tree contains an uniffi (MPL-2.0) crate" >&2
+            exit 1
+          fi
+          if cargo tree -e normal -p pdfloom-wasm --target wasm32-unknown-unknown | grep -i uniffi; then
+            echo "pdfloom-wasm's tree contains an uniffi (MPL-2.0) crate" >&2
+            exit 1
+          fi
+
   verapdf:
     name: veraPDF gate (UA-1 + UA-2)
     runs-on: ubuntu-latest
