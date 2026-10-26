@@ -1,0 +1,81 @@
+name: Web (build, e2e, deploy)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-e2e-deploy:
+    name: Build web/dist + headless e2e (+ deploy)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install wasm-pack (pinned release binary)
+        run: |
+          VER=v0.13.1
+          mkdir -p "$HOME/.local/bin"
+          curl -fsSL \
+            "https://github.com/rustwasm/wasm-pack/releases/download/$VER/wasm-pack-$VER-x86_64-unknown-linux-musl.tar.gz" \
+            | tar xz -C "$HOME/.local/bin" --strip-components=1 \
+              "wasm-pack-$VER-x86_64-unknown-linux-musl/wasm-pack"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          wasm-pack --version
+
+      - name: Build the static site (hashed assets, limits enforced)
+        run: bash scripts/build-web.sh
+
+      - name: Validate the Workers config (wrangler dry run)
+        run: npx --yes wrangler@latest deploy --dry-run --outdir /tmp/wrangler-out
+
+      - name: Install Playwright
+        run: npm install playwright
+
+      - name: Headless e2e against the static dist
+        run: |
+          python3 -m http.server 8912 --directory web/dist &
+          SERVER=$!
+          trap 'kill $SERVER 2>/dev/null || true' EXIT
+          sleep 1
+          node scripts/web-e2e.mjs http://localhost:8912
+
+      # Production deploy: pushes to main (and manual runs). Fails loudly
+      # when the secrets are not configured on the repository.
+      - name: Deploy to Cloudflare Workers
+        if: >-
+          github.event_name == 'push' && github.ref == 'refs/heads/main' ||
+          github.event_name == 'workflow_dispatch'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+
+      # PR previews (same-repo PRs only: forked PRs have no secrets).
+      # Each PR gets its own Worker name so previews never fight prod.
+      - name: Deploy PR preview
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.fork == false
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "CLOUDFLARE_API_TOKEN not set; skipping PR preview deploy"
+            exit 0
+          fi
+          npx --yes wrangler@latest deploy \
+            --name "pdfloom-studio-pr-${{ github.event.number }}"

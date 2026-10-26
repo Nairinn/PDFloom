@@ -61,6 +61,32 @@ jobs:
       - name: Generate every tests/output fixture
         run: cargo test --workspace --exclude pdfloom-py
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Add wasm32 target + wasm-pack (pinned release binary)
+        run: |
+          rustup target add wasm32-unknown-unknown
+          VER=v0.13.1
+          mkdir -p "$HOME/.local/bin"
+          curl -fsSL \
+            "https://github.com/rustwasm/wasm-pack/releases/download/$VER/wasm-pack-$VER-x86_64-unknown-linux-musl.tar.gz" \
+            | tar xz -C "$HOME/.local/bin" --strip-components=1 \
+              "wasm-pack-$VER-x86_64-unknown-linux-musl/wasm-pack"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          wasm-pack --version
+
+      # Byte-identical gate: the golden fixture (image inlined as a
+      # data: URL for the browser world) must build to the same bytes
+      # through native code and the WASM engine in Node. The outputs go
+      # to tests/output/ so the veraPDF gate below validates them too.
+      - name: WASM parity (byte-identical native vs in-browser engine)
+        run: |
+          wasm-pack build crates/pdfloom-wasm --target nodejs \
+            --out-dir pkg-nodejs --out-name pdfloom
+          node scripts/wasm-parity.mjs
+
       - name: Install veraPDF (pinned to 1.30.2)
         run: |
           mkdir -p tools/verapdf

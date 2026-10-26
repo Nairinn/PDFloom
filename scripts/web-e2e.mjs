@@ -2,13 +2,22 @@
 // 1. Load the editor, run #selftest, require 0 failures.
 // 2. Build a sample doc through the UI and assert the compliance
 //    badge turns green and the PDF downloads.
+// 3. Drop that PDF back onto the page: retag runs locally.
+//
+// Requires playwright in node_modules (CI: `npm install playwright`;
+// locally any directory works via PLAYWRIGHT_DIR).
 // Usage: node scripts/web-e2e.mjs <base-url>
-//        (default http://localhost:8321; the deploy CI passes the
-//        wrangler dev / preview URL)
+//        (default http://localhost:8912 served from web/dist)
 
-import { chromium } from "/tmp/pwtest/node_modules/playwright/index.mjs";
+let chromium;
+try {
+  ({ chromium } = await import("playwright"));
+} catch {
+  const dir = process.env.PLAYWRIGHT_DIR || "/tmp/pwtest";
+  ({ chromium } = await import(dir + "/node_modules/playwright/index.mjs"));
+}
 
-const BASE = process.argv[2] || "http://localhost:8321";
+const BASE = process.argv[2] || "http://localhost:8912";
 
 const browser = await chromium.launch();
 const page = await browser.newPage();
