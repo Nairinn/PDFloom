@@ -172,11 +172,11 @@ fn html_to_pdf_inner(
                     implied_pending = false;
                 }
                 match name.as_str() {
-                    "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "td" | "th" => {
-                        if block_open {
-                            flush_block(&mut batch, &mut text);
-                            block_open = false;
-                        }
+                    "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "td" | "th"
+                        if block_open =>
+                    {
+                        flush_block(&mut batch, &mut text);
+                        block_open = false;
                     }
                     "li" => {
                         let label = if list_ordered {
