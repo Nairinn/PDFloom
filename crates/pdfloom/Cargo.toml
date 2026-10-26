@@ -1,6 +1,8 @@
 [package]
 name = "pdfloom"
 description = "Free, MIT-licensed, from-scratch PDF library with PDF/UA end to end"
+categories = ["text-processing"]
+keywords = ["pdf", "pdfua", "accessibility", "tagged", "unicode"]
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -17,6 +19,21 @@ pdfloom-profile = { workspace = true }
 flate2 = "1"
 png = "0.17"
 thiserror = "2"
+# Embedded OFL fonts so `cargo add pdfloom` works with no font setup.
+# The feature is the DEFAULT; disable it for a lean build:
+#   pdfloom = { version = "0.1", default-features = false }
+pdfloom-fonts-data = { path = "../pdfloom-fonts-data", version = "0.1.0", optional = true }
+# CJK on-demand install (`pdfloom fonts install cjk`): hashing the
+# downloaded files. Optional, off by default — the API and CLI enable
+# it, embedders can leave it out.
+sha2 = { version = "0.10", optional = true }
+# Reading the Studio deploy's fonts manifest in --base mode.
+serde_json = { workspace = true, optional = true }
+
+[features]
+default = ["bundled-fonts"]
+bundled-fonts = ["dep:pdfloom-fonts-data"]
+cjk-install = ["dep:sha2", "dep:serde_json"]
 
 [dev-dependencies]
 pdfloom-render = { path = "../pdfloom-render", version = "0.1.0" }

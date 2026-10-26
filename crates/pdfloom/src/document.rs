@@ -53,11 +53,13 @@ impl Document {
     /// New document targeting a profile.
     #[must_use]
     pub fn new(profile: Profile) -> Self {
+        let mut registry = FontRegistry::new();
+        crate::register_bundled_fonts(&mut registry);
         Document {
             profile,
             meta: Metadata::default(),
             fonts: Vec::new(),
-            registry: FontRegistry::new(),
+            registry,
             substitutions: Vec::new(),
             pages: Vec::new(),
             images: Vec::new(),
@@ -85,7 +87,14 @@ impl Document {
     }
 
     /// Load and register an embedded font (TTF/OTF) by file path.
+    ///
+    /// Handle 0 is always the Latin default face (see [`font`](Self::font)):
+    /// the flow API draws through F0, so loading a script face first
+    /// must not leave it at handle 0.
     pub fn load_font(&mut self, path: &str) -> Result<usize, pdfloom_font::FontError> {
+        if self.fonts.is_empty() {
+            self.ensure_default_font_inner();
+        }
         let f = LoadedFont::load(path)?;
         self.fonts.push(f);
         Ok(self.fonts.len() - 1)
@@ -96,16 +105,28 @@ impl Document {
     /// sheets call this so their F0 text always resolves; a no-op when
     /// fonts are already registered.
     pub fn ensure_default_font(&mut self) {
-        if !self.fonts.is_empty() {
-            return;
+        if self.fonts.is_empty() {
+            self.ensure_default_font_inner();
         }
+    }
+
+    /// The non-reentrant core of [`ensure_default_font`]: pushes the
+    /// default face directly (no callbacks into `font`/`load_font`,
+    /// whose handle-0 guards call back here).
+    fn ensure_default_font_inner(&mut self) {
         let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../../fonts");
         let p = format!("{dir}/vendor/liberation/LiberationSans-Regular.ttf");
-        if std::path::Path::new(&p).exists() && self.load_font(&p).is_ok() {
-            return;
+        if std::path::Path::new(&p).exists() {
+            if let Ok(f) = pdfloom_font::LoadedFont::load(&p) {
+                self.fonts.push(f);
+                return;
+            }
         }
-        // Registry fallback (system or embedded look-alike).
-        let _ = self.font("Liberation Sans", "Regular");
+        // Registry resolution: embedded bundled-fonts tier, downloaded
+        // cache, system fonts (in that order).
+        if let Ok((f, _)) = self.registry.load("Liberation Sans", "Regular") {
+            self.fonts.push(f);
+        }
     }
 
     // --- Drawing-kit surface (used by pdfloom-draw) ----------------------
@@ -302,7 +323,21 @@ impl Document {
     /// "Bold Italic"). Standard-14 names resolve to embedded look-alikes.
     /// Unknown names fall back to Liberation Sans and record a
     /// substitution in the save report.
+    ///
+    /// Handle 0 is ALWAYS the Latin default face: the flow API draws
+    /// headings and unstyled text through it, so it must be able to
+    /// render Latin even when the first requested font is a script
+    /// face (a user loading Noto Sans Myanmar first, for example —
+    /// those faces carry no Latin glyphs and would render tofu).
     pub fn font(&mut self, family: &str, style: &str) -> Result<usize, Box<dyn std::error::Error>> {
+        if self.fonts.is_empty() {
+            let wants_default = family.eq_ignore_ascii_case("Liberation Sans")
+                && style.eq_ignore_ascii_case("Regular");
+            self.ensure_default_font_inner();
+            if wants_default {
+                return Ok(0);
+            }
+        }
         let (f, resolved) = self.registry.load(family, style)?;
         if resolved.substituted && !resolved.family.eq_ignore_ascii_case(family) {
             self.substitutions
@@ -1027,9 +1062,15 @@ impl Document {
             "11-007: Confirm the natural language declared is appropriate".into(),
         ];
         for (asked, used) in &self.substitutions {
-            human_review.push(format!(
-                "pdfloom: Font \"{asked}\" was not available; \"{used}\" was used instead"
-            ));
+            let mut note =
+                format!("pdfloom: Font \"{asked}\" was not available; \"{used}\" was used instead");
+            // The CJK faces never ship in the package; name the fix.
+            if asked.to_ascii_lowercase().contains("cjk") {
+                note.push_str(
+                    " (the Noto CJK faces are optional: run `pdfloom fonts install cjk`)",
+                );
+            }
+            human_review.push(note);
         }
         Ok((
             bytes,

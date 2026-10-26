@@ -22,6 +22,8 @@
 //! # }
 //! ```
 
+#[cfg(feature = "cjk-install")]
+pub mod cjk;
 mod document;
 mod extract;
 mod flow;
@@ -49,8 +51,42 @@ pub use retag::{TagSession, TextRun};
 pub use stream::{StreamError, StreamEvent, StreamWriter};
 pub use structure::Node;
 
+#[cfg(feature = "cjk-install")]
+pub use crate::cjk::{install_cjk_fonts, CjkFace, CjkInstallReport};
+
 /// WinAnsi helpers re-exported for callers that encode text themselves.
 pub use pdfloom_font::winansi;
 
 /// Re-exports from the core object model, for advanced use.
 pub use pdfloom_core::{Dict, Name, Object, PdfString, PdfVersion, Ref, Stream};
+
+/// Register the embedded `pdfloom-fonts-data` catalog into a registry
+/// (no-op when the `bundled-fonts` feature is off). `Document::new`
+/// does this automatically; the helper is shared with the streaming
+/// writer's default-face resolution.
+pub fn register_bundled_fonts(registry: &mut pdfloom_fonts::FontRegistry) {
+    #[cfg(feature = "bundled-fonts")]
+    for f in pdfloom_fonts_data::CATALOG {
+        registry.register_embedded(f.family, f.style, f.bytes);
+    }
+}
+
+/// The default face (Liberation Sans Regular) used for the F0 font
+/// resource: the vendored repo path when the checkout has it (dev),
+/// otherwise registry resolution, which reaches the embedded
+/// bundled-fonts tier, the downloaded-font cache, and the system
+/// fonts — in that order.
+#[doc(hidden)]
+pub fn load_default_font() -> Result<pdfloom_font::LoadedFont, Box<dyn std::error::Error>> {
+    let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../../fonts");
+    let p = format!("{dir}/vendor/liberation/LiberationSans-Regular.ttf");
+    if std::path::Path::new(&p).exists() {
+        if let Ok(f) = pdfloom_font::LoadedFont::load(&p) {
+            return Ok(f);
+        }
+    }
+    let mut registry = pdfloom_fonts::FontRegistry::new();
+    register_bundled_fonts(&mut registry);
+    let (f, _) = registry.load("Liberation Sans", "Regular")?;
+    Ok(f)
+}
