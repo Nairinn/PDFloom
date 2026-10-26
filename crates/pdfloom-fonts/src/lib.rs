@@ -458,7 +458,7 @@ impl FontRegistry {
         // 3.6 The per-user downloaded-font cache (`pdfloom fonts install
         // cjk` writes there, SHA-256 verified). Scanned lazily, once.
         if self.cache.is_none() {
-            self.cache = Some(scan_dir_by_family(&Self::cache_dir()));
+            self.cache = Some(scan_dir_by_family(Self::cache_dir().as_deref()));
         }
         if let Some(cached) = self.cache.as_ref() {
             if let Some(styles) = cached.get(&key) {
@@ -595,9 +595,7 @@ impl FontRegistry {
 /// Index every font file under `dir` (recursively) by family/style
 /// from each font's own name table — the downloaded-font cache shape.
 /// `None` (no conventional cache dir) yields an empty index.
-fn scan_dir_by_family(
-    dir: &Option<std::path::PathBuf>,
-) -> HashMap<String, HashMap<String, PathBuf>> {
+fn scan_dir_by_family(dir: Option<&std::path::Path>) -> HashMap<String, HashMap<String, PathBuf>> {
     let mut out: HashMap<String, HashMap<String, PathBuf>> = HashMap::new();
     if let Some(d) = dir {
         #[cfg(not(target_arch = "wasm32"))]
@@ -743,7 +741,7 @@ mod embedded_and_cache_tiers {
             "/../../fonts/vendor/liberation/LiberationSans-Regular.ttf"
         );
         std::fs::copy(src, dir.join("LiberationSans-Regular.ttf")).unwrap();
-        let scanned = super::scan_dir_by_family(&Some(dir.clone()));
+        let scanned = super::scan_dir_by_family(Some(&dir));
         let styles = scanned.get("liberation sans").expect("family indexed");
         assert!(styles.contains_key("regular"), "styles: {styles:?}");
         let _ = std::fs::remove_dir_all(&dir);
@@ -751,6 +749,6 @@ mod embedded_and_cache_tiers {
 
     #[test]
     fn none_cache_dir_scans_empty() {
-        assert!(super::scan_dir_by_family(&None).is_empty());
+        assert!(super::scan_dir_by_family(None).is_empty());
     }
 }
