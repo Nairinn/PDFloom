@@ -6,6 +6,12 @@ AGPL (or commercially licensed), and PDFBox is Java-only. PDFloom aims to
 cover the same ground with PDF/UA accessibility and in-file versioning
 built in. Formerly developed under the working name PDFgen.
 
+**Try it in your browser: [PDFloom Studio](https://pdfloom-studio.<your-subdomain>.workers.dev)**
+(the deployed URL appears after the first `scripts/build-web.sh` deploy;
+the entire editor — building, validating, retagging and previewing
+PDFs — runs client-side via WASM, so your documents never leave the
+page).
+
 ```rust
 let mut doc = pdfloom::Document::new(pdfloom::Profile::PdfUa1);
 doc.title("Quarterly Report").lang("en-US");
@@ -73,7 +79,7 @@ check.
 | Forms | AcroForm text fields with /TU accessible names; incremental-save `fill_text_field` |
 | HTML to PDF | Structural subset (headings, lists, tables, images, implied paragraphs, entities) to streamed tagged PDF |
 | Drawing kit | ASME Y14 sheets A-F, tagged title block, Y14.5 dimensions, Y14.35 revision block from file history |
-| Studio | Visual editor (`cargo run -p pdfloom-server`) - Figma-style dark UI; drag/resize/zoom (wheel, fit), inline text editing, layers panel with reading-order control, alignment, copy/paste, undo/redo, compliance badge; Download PDF + config side by side; `pdfloom build` replays the config to a byte-identical PDF through code |
+| Studio | Visual editor, Figma-style dark UI - drag/resize/zoom, inline text editing, layers with reading-order control, alignment, copy/paste, undo/redo, compliance badge; runs entirely in the browser through the WASM engine (no server needed), or against `pdfloom-server` in dev; Download PDF + config side by side; `pdfloom build` replays the config to a byte-identical PDF through code |
 | Reader | Classic, xref-stream and hybrid xref; lazy resolution; repair mode |
 | Retag | Open any PDF (even untagged), tag it, save it compliant |
 | Extraction | Text blocks from any PDF, tagged or not; honors ActualText |
@@ -133,6 +139,40 @@ the config side by side; feed the config to `pdfloom build` (or the
 `pdfloom-def` crate) and you get the same tagged PDF through code.
 Importing a config reopens it in the editor. Rebuilding the same config
 always produces byte-identical output.
+
+## Web build: Studio in the browser, no server
+
+The same crates compile to WebAssembly (`crates/pdfloom-wasm`,
+wasm-bindgen over `pdfloom`/`pdfloom-def`/`pdfloom-validate`/
+`pdfloom-render`), so Studio builds, validates, retags and previews
+PDFs entirely in a Web Worker in the browser. Byte-identity is a gate,
+not a hope: `scripts/wasm-parity.mjs` builds the golden fixture
+through native code and through the WASM engine in Node and fails on any
+byte difference, and CI runs the veraPDF gate over the WASM outputs.
+
+The engine never touches a filesystem, a clock or an RNG. Fonts are
+the bundled OFL faces (CJK excluded from the default deploy), fetched
+lazily by name and registered as bytes. Studio picks the WASM engine by
+default; `?server` selects the original HTTP path against a local
+`pdfloom-server` for development. Dropping a PDF onto the window retags
+it in-browser and downloads the result.
+
+Build and deploy (Cloudflare Workers, static assets only — no Worker
+script, SPA not-found handling):
+
+```bash
+brew install wasm-pack                  # once
+scripts/build-web.sh --dev              # engine only, for cargo run dev
+scripts/build-web.sh                    # full web/dist (hashed assets,
+                                        #   fonts, _headers; limit-checked)
+npx wrangler deploy                     # serves web/dist (wrangler.jsonc)
+```
+
+CI (`.github/workflows/deploy-web.yml`) builds `web/dist`, runs the
+Playwright e2e (`scripts/web-e2e.mjs`: selftest, download, compliance
+badge, drop-to-retag) against the static output and deploys to
+Cloudflare on push to main, plus per-PR preview Workers when
+`CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID` secrets are configured.
 
 ## Optional CJK fonts
 
