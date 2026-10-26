@@ -1,4 +1,6 @@
 [package]
+# Distributed via wasm-pack / npm, not crates.io.
+publish = false
 name = "pdfloom-wasm"
 version.workspace = true
 edition.workspace = true
@@ -10,7 +12,7 @@ description = "WASM bindings: the in-browser build engine for PDFloom Studio"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-pdfloom = { path = "../pdfloom", version = "0.1.0" }
+pdfloom = { path = "../pdfloom", version = "0.1.0", default-features = false }
 pdfloom-def = { path = "../pdfloom-def", version = "0.1.0" }
 pdfloom-parse = { path = "../pdfloom-parse", version = "0.1.0" }
 pdfloom-profile = { path = "../pdfloom-profile", version = "0.1.0" }

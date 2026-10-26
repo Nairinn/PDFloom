@@ -1,6 +1,8 @@
 [package]
 name = "pdfloom-def"
 description = "pdfloom-doc v1 document definitions: the editor/config format and its builder"
+categories = ["text-processing"]
+keywords = ["pdf", "pdfua", "accessibility", "tagged", "unicode"]
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -8,7 +10,7 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-pdfloom = { workspace = true }
+pdfloom = { path = "../pdfloom", version = "0.1.0", default-features = false }
 pdfloom-core = { workspace = true }
 pdfloom-profile = { workspace = true }
 serde = { workspace = true }
