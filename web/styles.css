@@ -14,7 +14,7 @@
   --field: #1e1e1e;            /* input background */
   --text: #ffffff;
   --text-2: #b3b3b3;
-  --text-3: #8c8c8c;
+  --text-3: #999999;   /* 4.9:1 on #2c2c2c, AA */
   --accent: #0d99ff;           /* selection + primary */
   --accent-soft: rgba(13, 153, 255, 0.22);
   --ok: #14ae5c;
@@ -84,11 +84,13 @@ svg { display: block; }
 
 button.primary {
   display: inline-flex; align-items: center; gap: 6px;
-  background: var(--accent); color: #fff; border-radius: 6px;
+  /* #0a6fc8: white text is 5.1:1 (AA). --accent itself is 3:1 and only
+     used for non-text (selection outlines, focus rings). */
+  background: #0a6fc8; color: #fff; border-radius: 6px;
   padding: 0 12px; height: 28px; font-weight: 600; font-size: 12px;
   white-space: nowrap; margin-left: 4px;
 }
-button.primary:hover { background: #0a86e8; }
+button.primary:hover { background: #095fa8; }
 button.primary .btn-label { font-weight: 600; }
 
 /* ---------------------------------------------------------------- main */
@@ -290,17 +292,20 @@ button.primary .btn-label { font-weight: 600; }
 
 #insert-bar {
   position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
-  display: flex; align-items: center; gap: 2px;
+  display: flex; flex-wrap: wrap; justify-content: center;
+  align-items: center; gap: 8px;
+  max-width: calc(100vw - 24px);
   background: var(--panel); border: 1px solid var(--border);
-  border-radius: 10px; padding: 4px;
+  border-radius: 12px; padding: 6px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
   z-index: 10;
 }
-#insert-bar .ib-sep { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
+#insert-bar .ib-sep { width: 1px; height: 18px; background: var(--border);
+                      margin: 0 8px; flex: none; }
 #insert-bar button {
-  width: 32px; height: 32px; border-radius: 7px;
+  width: 34px; height: 34px; border-radius: 8px;
   display: inline-flex; align-items: center; justify-content: center;
-  color: var(--text-2);
+  color: var(--text-2); flex: none;
 }
 #insert-bar button:hover { background: var(--panel-2); color: var(--text); }
 #insert-bar button .glyph { font-size: 14px; font-weight: 700; }
@@ -442,3 +447,10 @@ button.primary .btn-label { font-weight: 600; }
 #compliance-badge.unknown { background: var(--panel-2); color: var(--text-2); }
 
 @media (max-width: 1100px) { #status-hints { display: none; } }
+
+/* Narrow viewports: keep the zoom pill clear of the (wrapping) insert
+   bar so no floating control is clipped or overlapped. */
+@media (max-width: 760px) {
+  #zoom-bar { bottom: 84px; }
+  #doc-title { max-width: 34vw; }
+}
