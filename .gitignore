@@ -31,6 +31,11 @@ bindings/*/build/
 bindings/java/classes/
 fonts/vendor/noto/NotoSansCJKjp-*.otf
 
+# wasm-pack output
+crates/pdfloom-wasm/pkg-nodejs/
+crates/pdfloom-wasm/pkg/
+web/dist/
+
 # cargo-fuzz artifacts
 fuzz/target/
 fuzz/artifacts/
