@@ -83,6 +83,27 @@ let clipboard = null;      // serialized element for copy/paste
 let spaceDown = false;    // space held = pan mode
 let titleOrig = null;     // doc.title when the title input got focus
 let lastNudge = 0;         // debounce: a burst of arrow keys = one undo step
+
+// The build engine (engine.js): WASM in the browser by default, the
+// HTTP path with ?server for local development.
+let engine = window.PDFloomEngine.createEngine();
+(function initEngine() {
+  engine.ready.then(() => {
+    if (engine.name === "wasm")
+      setStatus("in-browser engine ready \u2014 PDFs build without leaving your machine");
+  }).catch((e) => {
+    // The wasm engine isn't built yet; a local pdfloom-server can
+    // still save the session (dev flow). Otherwise surface the error.
+    fetch("/api/health").then((r) => {
+      if (!r.ok) throw new Error("no server");
+      engine = new window.PDFloomEngine.ServerEngine();
+      setStatus("wasm engine not found (run scripts/build-web.sh) \u2014 using local pdfloom-server");
+    }).catch(() => {
+      setBadge("engine error", "bad");
+      setStatus("engine failed to load: " + (e.message || e));
+    });
+  });
+})();
 const boxMap = new WeakMap(); // element -> its DOM box (this render)
 let geomInputs = [];      // X/Y/W/H inputs, synced without re-render
 
@@ -1382,7 +1403,11 @@ $("export-config").addEventListener("click", () => {
 $("import-config").addEventListener("click", () => $("config-file").click());
 $("config-file").addEventListener("change", async () => {
   const file = $("config-file").files[0];
-  if (!file) return;
+  if (file) await openConfigFile(file);
+  $("config-file").value = "";
+});
+
+async function openConfigFile(file) {
   try {
     const parsed = JSON.parse(await file.text());
     if (parsed.format !== "pdfloom-doc") throw new Error("not a pdfloom-doc file");
@@ -1395,8 +1420,46 @@ $("config-file").addEventListener("change", async () => {
   } catch (e) {
     alert("Could not import: " + e.message);
   }
-  $("config-file").value = "";
+}
+
+// ------------------------------------------------ drag & drop (local only)
+//
+// Drop a PDF anywhere on the window: retag it in the browser and
+// download the result. Drop a pdfloom-doc config: open it. Either way
+// the file never leaves the page.
+
+document.addEventListener("dragover", (ev) => ev.preventDefault());
+document.addEventListener("drop", (ev) => {
+  ev.preventDefault();
+  const file = ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0];
+  if (!file) return;
+  if (file.type === "application/pdf" || /\.pdf$/i.test(file.name)) retagFile(file);
+  else if (file.type === "application/json" || /\.json$/i.test(file.name)) openConfigFile(file);
 });
+
+async function retagFile(file) {
+  setStatus(`retagging ${file.name} locally \u2014 the file never leaves your browser`);
+  try {
+    await engine.ready;
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const base = file.name.replace(/\.pdf$/i, "");
+    const { pdf, report } = await engine.retag(bytes,
+      { title: base, lang: doc.lang, profile: doc.profile });
+    showReport(report);
+    let note = `retagged in the browser \u2014 ${pdf.length} bytes; the file never left this page`;
+    try {
+      const v = await engine.validate(pdf);
+      if (v.findings && v.findings.length)
+        note = `retagged \u2014 ${v.findings.length} validator finding(s): ` +
+          v.findings.slice(0, 3).map((f) => f.id).join(", ");
+    } catch {}
+    downloadBlob(new Blob([pdf], { type: "application/pdf" }), base + ".retagged.pdf");
+    setStatus(note);
+  } catch (e) {
+    setBadge("retag error", "bad");
+    setStatus("retag failed: " + e.message);
+  }
+}
 
 // --------------------------------------------------------------- export
 
@@ -1414,26 +1477,13 @@ async function buildPdf() {
   setStatus("building...");
   if (showPreview) previewState("Building the PDF\u2026", "loading");
   try {
-    const res = await fetch("/api/build", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ def: doc }),
-    });
-    if (!res.ok) {
-      const t = await res.text();
-      setBadge("build error", "bad");
-      setStatus("build failed: " + t.slice(0, 300));
-      if (showPreview) previewState("The build failed:\n" + t.slice(0, 300), "error");
-      return null;
-    }
-    const data = await res.json();
-    showReport(data.report);
-    const bytes = Uint8Array.from(atob(data.pdf_base64), (c) => c.charCodeAt(0));
-    return bytes;
+    const { pdf, report } = await engine.build(doc);
+    showReport(report);
+    return pdf;
   } catch (e) {
-    setBadge("offline?", "bad");
-    setStatus("could not reach pdfloom-server: " + e.message);
-    if (showPreview) previewState("Could not reach pdfloom-server:\n" + e.message, "error");
+    setBadge("build error", "bad");
+    setStatus("build failed: " + e.message);
+    if (showPreview) previewState("The build failed:\n" + e.message, "error");
     return null;
   }
 }
@@ -1671,10 +1721,32 @@ async function runSelfTest() {
   });
 
   try {
+    await engine.ready;
     const bytes = await buildPdf();
-    if (bytes) { pass++; pre.append("PASS build endpoint returns a PDF (" + bytes.length + " bytes)\n"); }
-    else { fail++; pre.append("FAIL build endpoint returned no bytes\n"); }
-  } catch (e) { fail++; pre.append("FAIL build endpoint threw: " + e.message + "\n"); }
+    if (bytes) { pass++; pre.append(`PASS ${engine.name} engine builds a PDF (${bytes.length} bytes)\n`); }
+    else { fail++; pre.append(`FAIL ${engine.name} engine returned no bytes\n`); }
+  } catch (e) { fail++; pre.append("FAIL engine build threw: " + e.message + "\n"); }
+
+  // WASM-path coverage: retag the PDF we just built and validate it,
+  // entirely in the browser.
+  try {
+    const built = await buildPdf();
+    if (built) {
+      const { pdf, report } = await engine.retag(built,
+        { title: "Selftest retag", lang: doc.lang, profile: doc.profile });
+      const okPdf = pdf && pdf.length > 4 &&
+        pdf[0] === 0x25 && pdf[1] === 0x50 && pdf[2] === 0x44 && pdf[3] === 0x46;
+      const okReport = report && typeof report.status === "string";
+      if (okPdf && okReport) {
+        pass++;
+        pre.append(`PASS retag in the browser: ${pdf.length} bytes, status ${report.status}\n`);
+        const v = await engine.validate(pdf);
+        if (v && Array.isArray(v.findings)) {
+          pass++; pre.append(`PASS validate in the browser: ${v.findings.length} findings\n`);
+        } else { fail++; pre.append("FAIL validate in the browser returned no findings array\n"); }
+      } else { fail++; pre.append("FAIL retag in the browser produced no PDF/report\n"); }
+    }
+  } catch (e) { fail++; pre.append("FAIL retag/validate threw: " + e.message + "\n"); }
 
   pre.append(`SELFTEST DONE ${pass} pass ${fail} fail\n`);
 }

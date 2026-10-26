@@ -126,12 +126,13 @@
   <footer id="status-bar">
     <span id="compliance-badge" class="unknown">not built yet</span>
     <span id="status-text">Drag elements, then Download PDF. Rebuild from code with: pdfloom build config.json</span>
-    <span id="status-hints">double-click text to edit &middot; drag to move &middot; arrows nudge &middot; Ctrl/Cmd+Z undo</span>
+    <span id="status-hints">double-click text to edit &middot; drop a PDF to retag it locally &middot; Ctrl/Cmd+Z undo</span>
   </footer>
 
   <input type="file" id="config-file" accept=".json,application/json" hidden>
   <input type="file" id="image-file" accept="image/png,image/jpeg" hidden>
 </div>
+<script src="/engine.js"></script>
 <script src="/app.js"></script>
 </body>
 </html>

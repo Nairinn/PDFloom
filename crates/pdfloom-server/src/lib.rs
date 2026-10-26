@@ -154,13 +154,27 @@ fn web_dir() -> PathBuf {
         .unwrap_or_else(|_| PathBuf::from("web"))
 }
 
+fn fonts_dir() -> PathBuf {
+    // Repo root from CARGO_MANIFEST_DIR: crates/pdfloom-server/../../fonts
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fonts")
+        .canonicalize()
+        .unwrap_or_else(|_| PathBuf::from("fonts"))
+}
+
 /// The full application router (also used by the tests).
+///
+/// In addition to the editor and the build API, `/fonts/*` serves the
+/// bundled OFL fonts from the repo root, mirroring the deployed static
+/// layout so the browser engine's lazy font fetches work in dev.
 pub fn router() -> Router {
     let serve = tower_http::services::ServeDir::new(web_dir());
+    let serve_fonts = tower_http::services::ServeDir::new(fonts_dir());
     Router::new()
         .route("/api/build", post(api_build))
         .route("/api/fonts", get(api_fonts))
         .route("/api/health", get(api_health))
+        .nest_service("/fonts", serve_fonts)
         .fallback_service(serve)
         .layer(DefaultBodyLimit::max(64 * 1024 * 1024))
 }
