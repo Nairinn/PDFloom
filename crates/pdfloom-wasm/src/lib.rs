@@ -155,6 +155,106 @@ pub fn build(config_json: &str, fonts: &FontBundle) -> Result<BuildOutput, JsVal
     })
 }
 
+/// Build a streamed document from a JSON envelope, entirely in memory —
+/// the browser counterpart of the native streaming writer. The envelope:
+/// `{"profile":"ua1", "title":"...", "lang":"en-US", "events":[...]}` where
+/// each event is one of
+/// `{"type":"begin","tag":"H1","alt":null,"attrs":null}`,
+/// `{"type":"text","text":"...","font":0,"size":11.0}`,
+/// `{"type":"end"}`, `{"type":"pagebreak"}`.
+/// `font` must be 0 (the default face); image events are rejected —
+/// embed images through [`build`] with data: URLs instead.
+///
+/// The bytes this returns are identical to a native
+/// `StreamWriter::create` over the same events and fonts (the memory
+/// sink is proven byte-identical to the file sink by the native suite).
+///
+/// # Errors
+///
+/// A `JsString` describing the parse, font or streaming failure.
+#[wasm_bindgen]
+#[allow(clippy::needless_pass_by_value)]
+pub fn build_stream(envelope_json: &str, fonts: &FontBundle) -> Result<BuildOutput, JsValue> {
+    let env: serde_json::Value = serde_json::from_str(envelope_json)
+        .map_err(|e| JsValue::from_str(&format!("envelope: {e}")))?;
+    let profile = if env["profile"]
+        .as_str()
+        .unwrap_or("ua1")
+        .eq_ignore_ascii_case("ua2")
+    {
+        pdfloom::Profile::PdfUa2
+    } else {
+        pdfloom::Profile::PdfUa1
+    };
+    let title = env["title"].as_str().unwrap_or("Streamed document");
+    let lang = env["lang"].as_str().unwrap_or("en-US");
+    let events = env["events"]
+        .as_array()
+        .ok_or_else(|| JsValue::from_str("envelope: events must be an array"))?;
+
+    let default = fonts
+        .entries
+        .iter()
+        .find(|(f, s, _)| {
+            f.eq_ignore_ascii_case("Liberation Sans") && s.eq_ignore_ascii_case("Regular")
+        })
+        .map(|(_, _, d)| d.clone())
+        .ok_or_else(|| {
+            JsValue::from_str("FontBundle needs Liberation Sans Regular for streaming")
+        })?;
+    let default = pdfloom::LoadedFont::from_bytes(default)
+        .map_err(|e| JsValue::from_str(&format!("default font: {e}")))?;
+
+    let mut writer = pdfloom::StreamWriter::create_over(Vec::new(), default, profile, title, lang)
+        .map_err(|e| JsValue::from_str(&format!("stream: {e}")))?;
+    for (i, ev) in events.iter().enumerate() {
+        let event = stream_event(ev).map_err(|e| JsValue::from_str(&format!("event {i}: {e}")))?;
+        writer
+            .push(vec![event])
+            .map_err(|e| JsValue::from_str(&format!("stream event {i}: {e}")))?;
+    }
+    let (bytes, report) = writer
+        .into_sink()
+        .map_err(|e| JsValue::from_str(&format!("stream finish: {e}")))?;
+    Ok(BuildOutput {
+        pdf: bytes,
+        report: report_json(&report),
+    })
+}
+
+/// Map one JSON event object onto a `StreamEvent`.
+fn stream_event(v: &serde_json::Value) -> Result<pdfloom::StreamEvent, String> {
+    let ty = v["type"].as_str().unwrap_or_default();
+    match ty {
+        "begin" => Ok(pdfloom::StreamEvent::Begin {
+            tag: v["tag"].as_str().unwrap_or("P").to_string(),
+            alt: v["alt"].as_str().map(str::to_string),
+            attrs: v["attrs"].as_object().map(|o| {
+                o.iter()
+                    .map(|(k, val)| (k.clone(), val.as_str().unwrap_or_default().to_string()))
+                    .collect::<Vec<_>>()
+            }),
+        }),
+        "text" => {
+            let font = v["font"].as_u64().unwrap_or(0) as usize;
+            if font != 0 {
+                return Err("only font 0 (the default face) can stream in the browser".into());
+            }
+            Ok(pdfloom::StreamEvent::Text {
+                text: v["text"].as_str().unwrap_or_default().to_string(),
+                font: 0,
+                size: v["size"].as_f64().unwrap_or(11.0),
+            })
+        }
+        "end" => Ok(pdfloom::StreamEvent::End),
+        "pagebreak" => Ok(pdfloom::StreamEvent::PageBreak),
+        "image" => Err("streaming image events are native-only; embed images \
+                        as data: URLs through build()"
+            .into()),
+        other => Err(format!("unknown event type {other:?}")),
+    }
+}
+
 /// Run the Matterhorn machine checks over an in-memory PDF and return
 /// the findings as JSON (`findings[]` with `id`/`message`/`context`,
 /// plus `review[]`).
