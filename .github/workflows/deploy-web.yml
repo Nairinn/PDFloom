@@ -40,8 +40,13 @@ jobs:
       - name: Validate the Workers config (wrangler dry run)
         run: npx --yes wrangler@latest deploy --dry-run --outdir /tmp/wrangler-out
 
-      - name: Install Playwright
-        run: npm install playwright
+      - name: Install Playwright (+ browser system deps)
+        run: |
+          npm install --no-save playwright
+          # --with-deps installs the shared libraries headless Chromium
+          # needs on a bare runner; the browser itself comes from the
+          # package postinstall (idempotent either way).
+          npx playwright install --with-deps chromium
 
       - name: Headless e2e against the static dist
         run: |
