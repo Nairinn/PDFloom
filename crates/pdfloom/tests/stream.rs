@@ -65,7 +65,13 @@ fn memory_sink_is_byte_identical_to_file_sink() {
         for s in 0..40 {
             let mut batch = Vec::with_capacity(4);
             batch.push(StreamEvent::Begin {
-                tag: if s % 10 == 0 { "H2".into() } else { "P".into() },
+                tag: if s == 0 {
+                    "H1".into()
+                } else if s % 10 == 0 {
+                    "H2".into()
+                } else {
+                    "P".into()
+                },
                 alt: None,
                 attrs: None,
             });

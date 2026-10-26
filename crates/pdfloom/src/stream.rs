@@ -180,8 +180,7 @@ impl StreamWriter<std::fs::File> {
         if let Some(parent) = std::path::Path::new(path).parent() {
             let _ = std::fs::create_dir_all(parent);
         }
-        let font = pdfloom_font::LoadedFont::load(default_font_path()?)
-            .map_err(|e| StreamError::Font(e.to_string()))?;
+        let font = crate::load_default_font().map_err(|e| StreamError::Font(e.to_string()))?;
         Self::create_over(std::fs::File::create(path)?, font, profile, title, lang)
     }
 }
@@ -1163,15 +1162,4 @@ fn emit_image_xobject<W: std::io::Write>(
         }
     };
     w.write_object(id, &Object::Stream(stream))
-}
-
-/// Locate the default font file for streaming documents. The vendored
-/// Liberation Sans ships with the repo, so any checkout has it.
-fn default_font_path() -> Result<String, StreamError> {
-    let dir = env!("CARGO_MANIFEST_DIR").to_string() + "/../../fonts";
-    let p = format!("{dir}/vendor/liberation/LiberationSans-Regular.ttf");
-    if std::path::Path::new(&p).exists() {
-        return Ok(p);
-    }
-    Err(StreamError::Font("no default font available".into()))
 }

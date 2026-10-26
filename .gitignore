@@ -5,6 +5,7 @@ Cargo.lock.bak
 
 # Generated test output
 /tests/output/
+crates/pdfloom/tests/output/
 /tests/golden/*.actual.pdf
 *.actual.pdf
 
