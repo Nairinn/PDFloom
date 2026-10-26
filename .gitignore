@@ -31,10 +31,15 @@ bindings/*/build/
 bindings/java/classes/
 fonts/vendor/noto/NotoSansCJKjp-*.otf
 
+# Node (playwright installs for the e2e harness)
+/node_modules/
+package-lock.json
+
 # wasm-pack output
 crates/pdfloom-wasm/pkg-nodejs/
 crates/pdfloom-wasm/pkg/
 web/dist/
+web/engine/
 
 # cargo-fuzz artifacts
 fuzz/target/

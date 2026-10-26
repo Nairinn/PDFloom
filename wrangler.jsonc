@@ -1,0 +1,20 @@
+// Cloudflare Workers configuration for PDFloom Studio.
+//
+// Asset-only deployment: no Worker script (main) is needed — the whole
+// editor runs in the browser via the WASM engine, so Workers just
+// serves the static files. not_found_handling: single-page-application
+// serves index.html for navigation requests that match no asset.
+//
+// Build the assets first: scripts/build-web.sh (writes web/dist).
+//
+// Keys per the Workers static assets docs:
+// https://developers.cloudflare.com/workers/static-assets/routing/single-page-application/
+{
+  "$schema": "https://unpkg.com/wrangler/config-schema.json",
+  "name": "pdfloom-studio",
+  "compatibility_date": "2026-10-25",
+  "assets": {
+    "directory": "./web/dist",
+    "not_found_handling": "single-page-application"
+  }
+}
