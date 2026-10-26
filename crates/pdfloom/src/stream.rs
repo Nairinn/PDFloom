@@ -164,7 +164,9 @@ struct ElemRecord {
     scope: Option<String>,
 }
 
-impl<W: std::io::Write> StreamWriter<W> {
+/// File-backed construction: the classic native entry point. The
+/// generic sink lives in [`create_over`](StreamWriter::create_over).
+impl StreamWriter<std::fs::File> {
     /// New streaming writer over a file path. The default font is resolved
     /// immediately so bare documents work.
     pub fn create(
@@ -182,12 +184,14 @@ impl<W: std::io::Write> StreamWriter<W> {
             .map_err(|e| StreamError::Font(e.to_string()))?;
         Self::create_over(std::fs::File::create(path)?, font, profile, title, lang)
     }
+}
 
+impl<W: std::io::Write> StreamWriter<W> {
     /// New streaming writer over any sink (a `Vec<u8>` in memory, a
     /// socket, ...). `default_font` is the F0 face; the browser path
     /// passes the Liberation Sans Regular bytes it fetched, so nothing
     /// here touches the filesystem. The output is byte-identical to
-    /// [`create`](Self::create).
+    /// [`create`](StreamWriter::create).
     pub fn create_over(
         sink: W,
         default_font: pdfloom_font::LoadedFont,
@@ -634,7 +638,7 @@ impl<W: std::io::Write> StreamWriter<W> {
 
     /// Finish the document: fonts, structure tree, parent tree, pages,
     /// metadata, catalog, xref, trailer. Returns the accessibility report.
-    pub fn finish(mut self) -> Result<pdfloom_profile::SaveReport, StreamError> {
+    pub fn finish(self) -> Result<pdfloom_profile::SaveReport, StreamError> {
         self.into_sink().map(|(_, report)| report)
     }
 
@@ -898,22 +902,29 @@ impl<W: std::io::Write> StreamWriter<W> {
         self.out.write_all(x.as_bytes())?;
         self.out.flush()?;
 
-        Ok(pdfloom_profile::SaveReport {
-            profile: self.profile,
-            status,
-            violations,
-            human_review: vec![
-                "09-001: Confirm tags are in logical reading order".into(),
-                "06-004: Confirm the dc:title clearly identifies the document".into(),
-                "11-007: Confirm the natural language declared is appropriate".into(),
-            ],
-        })
+        let sink = self
+            .out
+            .into_inner()
+            .map_err(|e| StreamError::Io(e.into_error()))?;
+        Ok((
+            sink,
+            pdfloom_profile::SaveReport {
+                profile: self.profile,
+                status,
+                violations,
+                human_review: vec![
+                    "09-001: Confirm tags are in logical reading order".into(),
+                    "06-004: Confirm the dc:title clearly identifies the document".into(),
+                    "11-007: Confirm the natural language declared is appropriate".into(),
+                ],
+            },
+        ))
     }
 }
 
 /// Emit the 4 font objects at the reserved ids.
-fn emit_stream_font(
-    w: &mut StreamWriter,
+fn emit_stream_font<W: std::io::Write>(
+    w: &mut StreamWriter<W>,
     base: u32,
     f: &pdfloom_font::LoadedFont,
 ) -> Result<(), StreamError> {
@@ -1077,8 +1088,8 @@ pub(crate) fn flate_compress(data: &[u8]) -> Vec<u8> {
 /// Emit one image XObject. RGB payloads Flate-compress and carry an
 /// /SMask when the source had alpha; JPEG passes through as DCTDecode
 /// with the color space read from the SOF component count.
-fn emit_image_xobject(
-    w: &mut StreamWriter,
+fn emit_image_xobject<W: std::io::Write>(
+    w: &mut StreamWriter<W>,
     id: u32,
     img: &crate::image::Image,
 ) -> Result<(), StreamError> {
