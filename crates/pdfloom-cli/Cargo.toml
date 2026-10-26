@@ -1,6 +1,8 @@
 [package]
 name = "pdfloom-cli"
 description = "pdfloom command-line tools: validate"
+categories = ["command-line-utilities"]
+keywords = ["pdf", "cli", "pdfua", "accessibility", "validator"]
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -12,10 +14,11 @@ name = "pdfloom"
 path = "src/main.rs"
 
 [dependencies]
+pdfloom = { path = "../pdfloom", version = "0.1.0", features = ["cjk-install"] }
 pdfloom-validate = { workspace = true }
-pdfloom-render = { path = "../pdfloom-render" }
-pdfloom-def = { path = "../pdfloom-def" }
-pdfloom-profile = { path = "../pdfloom-profile" }
+pdfloom-render = { path = "../pdfloom-render", version = "0.1.0" }
+pdfloom-def = { path = "../pdfloom-def", version = "0.1.0" }
+pdfloom-profile = { path = "../pdfloom-profile", version = "0.1.0" }
 
 [lints]
 workspace = true

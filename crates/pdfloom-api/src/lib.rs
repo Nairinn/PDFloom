@@ -182,3 +182,31 @@ impl PdfDocument {
 fn str_err(e: pdfloom::FontError) -> String {
     e.to_string()
 }
+
+/// Result of an `install_cjk_fonts` call.
+#[derive(Debug, Clone)]
+pub struct CjkInstallResult {
+    /// The per-user cache directory the faces were written to.
+    pub cache_dir: String,
+    /// Faces that were already present.
+    pub already_present: Vec<String>,
+    /// Faces downloaded and SHA-256 verified this run.
+    pub installed: Vec<String>,
+}
+
+/// Fetch the optional Noto CJK JP faces into the per-user font cache
+/// (bindings-friendly form of `pdfloom::install_cjk_fonts`; the
+/// network is only touched by this call, never during builds or
+/// saves). `base_url` optionally points at a PDFloom Studio deploy.
+///
+/// # Errors
+///
+/// A human-readable `String` on download or verification failure.
+pub fn install_cjk_fonts(base_url: Option<String>) -> Result<CjkInstallResult, String> {
+    let r = pdfloom::install_cjk_fonts(base_url.as_deref())?;
+    Ok(CjkInstallResult {
+        cache_dir: r.cache_dir,
+        already_present: r.already_present,
+        installed: r.installed,
+    })
+}

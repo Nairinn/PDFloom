@@ -34,6 +34,9 @@ jobs:
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           wasm-pack --version
 
+      - name: Fetch optional CJK fonts (deployed for fonts install --base)
+        run: bash scripts/fetch-cjk-fonts.sh
+
       - name: Build the static site (hashed assets, limits enforced)
         run: bash scripts/build-web.sh
 

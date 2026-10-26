@@ -99,14 +99,35 @@ cp "$PKG_TMP/pdfloom.js" "$PKG_TMP/pdfloom_bg.wasm" "$ASSETS/"
 sed 's|"/engine/pdfloom.js"|"./pdfloom.js"|; s|"/fonts/"|"/fonts/'"$FHASH"'/"|' \
   "$WEB/worker.js" > "$ASSETS/worker.js"
 
-echo "== copying fonts (CJK excluded) =="
+echo "== copying fonts (CJK included when fetched) =="
 (cd "$FONT_SRC" && find . -type f \
-   \( -name '*.ttf' -o -name 'LICENSE' -o -name '*.txt' \) \
-   ! -name 'NotoSansCJK*' -print0) |
+   \( -name '*.ttf' -o -name '*.otf' -o -name 'LICENSE' -o -name 'LICENSE-*' \) \
+   -print0) |
 while IFS= read -r -d '' f; do
   mkdir -p "$FONTS/$(dirname "$f")"
   cp "$FONT_SRC/$f" "$FONTS/$f"
 done
+
+# The fonts manifest: every deployed face with its SHA-256 and hashed
+# URL. `pdfloom fonts install cjk --base <site>` reads it to download
+# the CJK faces from this deploy (hash-checked against the compiled-in
+# values either way).
+echo "== writing fonts-manifest.json =="
+MANIFEST="$DIST/fonts-manifest.json"
+printf '[' > "$MANIFEST"
+first=1
+while IFS= read -r -d '' f; do
+  rel="${f#./}"
+  sha="$(shasum -a 256 "$FONTS/$rel" | cut -d' ' -f1)"
+  size="$(size_of "$FONTS/$rel")"
+  [ "$size" -le "$MAX_FILE_BYTES" ] \
+    || { echo "error: font $rel is $size bytes (over the 25 MiB asset limit)" >&2; exit 1; }
+  [ "$first" -eq 0 ] && printf ',' >> "$MANIFEST"
+  first=0
+  printf '{\"file\":\"%s\",\"sha256\":\"%s\",\"url\":\"/fonts/%s/%s\"}' \
+    "$rel" "$sha" "$FHASH" "$rel" >> "$MANIFEST"
+done < <(cd "$FONTS" && find . -type f \( -name '*.ttf' -o -name '*.otf' \) -print0 | sort -z)
+printf ']' >> "$MANIFEST"
 
 echo "== writing index.html shell =="
 sed -e 's|"/styles.css"|"/assets/'"$AHASH"'/styles.css"|' \

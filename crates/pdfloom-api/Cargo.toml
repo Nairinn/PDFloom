@@ -1,6 +1,8 @@
 [package]
 name = "pdfloom-api"
 description = "Bindings-friendly facade over pdfloom: owned types, no lifetimes or closures"
+categories = ["api-bindings"]
+keywords = ["pdf", "bindings", "ffi", "pdfua", "accessibility"]
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -8,7 +10,7 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-pdfloom = { workspace = true }
+pdfloom = { workspace = true, features = ["cjk-install"] }
 
 [lints]
 workspace = true

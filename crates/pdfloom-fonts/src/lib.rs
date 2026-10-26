@@ -316,21 +316,31 @@ impl FontRegistry {
     }
 
     /// The per-user downloaded-font cache directory (populated by
-    /// `pdfloom fonts install cjk`). `None` when the platform has no
-    /// conventional cache location.
+    /// `pdfloom fonts install cjk`): the conventional platform location
+    /// resolved from environment variables, with no platform crate
+    /// (dirs-sys drags in option-ext, MPL-2.0, which must not reach
+    /// the core API - see deny.toml). `None` on platforms without a
+    /// conventional location or without the env set (wasm always).
     #[must_use]
     pub fn cache_dir() -> Option<std::path::PathBuf> {
         static DIR: std::sync::OnceLock<Option<std::path::PathBuf>> = std::sync::OnceLock::new();
         DIR.get_or_init(|| {
-            #[cfg(not(target_arch = "wasm32"))]
-            {
-                directories::ProjectDirs::from("", "", "pdfloom")
-                    .map(|d| d.cache_dir().join("fonts"))
-            }
-            #[cfg(target_arch = "wasm32")]
-            {
-                None
-            }
+            let base = if cfg!(target_os = "macos") {
+                std::env::var_os("HOME").map(|h| {
+                    std::path::PathBuf::from(h).join("Library/Caches")
+                })
+            } else if cfg!(target_os = "windows") {
+                std::env::var_os("LOCALAPPDATA").map(std::path::PathBuf::from)
+            } else {
+                // XDG desktops (Linux, BSDs); browsers/wasm have no env.
+                std::env::var_os("XDG_CACHE_HOME")
+                    .map(std::path::PathBuf::from)
+                    .or_else(|| {
+                        std::env::var_os("HOME")
+                            .map(|h| std::path::PathBuf::from(h).join(".cache"))
+                    })
+            };
+            base.map(|b| b.join("pdfloom").join("fonts"))
         })
         .clone()
     }

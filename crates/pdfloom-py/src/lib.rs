@@ -14,6 +14,7 @@ use pdfloom_api::{PdfDocument, TargetProfile};
 use pyo3::create_exception;
 use pyo3::exceptions::PyWarning;
 use pyo3::prelude::*;
+use pyo3::wrap_pyfunction;
 use std::collections::HashSet;
 
 create_exception!(pdfloom, PdfError, pyo3::exceptions::PyValueError);
@@ -219,11 +220,23 @@ impl Document {
 
 /// Module init: expose the classes and exceptions. The pymodule name MUST
 /// match the cdylib name (pdfloom) so maturin finds the init symbol.
+/// Fetch the optional Noto CJK JP faces (16 MB each) into the per-user
+/// font cache, SHA-256 verified. `base_url` optionally targets a
+/// PDFloom Studio deploy. Documents referencing "Noto Sans CJK JP"
+/// without this report the missing font in the save report.
+#[pyfunction]
+#[pyo3(signature = (base_url=None))]
+fn install_cjk_fonts(base_url: Option<String>) -> PyResult<Vec<String>> {
+    let r = pdfloom_api::install_cjk_fonts(base_url).map_err(PdfError::new_err)?;
+    Ok(r.installed)
+}
+
 #[pymodule]
 fn pdfloom(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Profile>()?;
     m.add_class::<Document>()?;
     m.add_class::<Report>()?;
+    m.add_function(wrap_pyfunction!(install_cjk_fonts, m)?)?;
     m.add("PdfError", m.py().get_type::<PdfError>())?;
     m.add("PdfUaWarning", m.py().get_type::<PdfUaWarning>())?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;

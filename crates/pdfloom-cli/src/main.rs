@@ -31,6 +31,11 @@ COMMANDS:
                                      pdfloom-doc definition (the format the
                                      visual editor exports)
         --out FILE.pdf               Output path (default <config>.pdf)
+    fonts install cjk                Fetch the optional Noto CJK JP faces
+                                     (16 MB each, SHA-256 verified) into
+                                     the per-user font cache
+        --base URL                   Download from a PDFloom Studio deploy
+                                     instead of the notofonts releases
     help                             Print this message
 
 PDF/UA conformance: pdfloom save() never blocks output. Files claim
@@ -116,6 +121,38 @@ fn main() -> ExitCode {
                     eprintln!("error: {e}");
                     ExitCode::from(2)
                 }
+            }
+        }
+        Some("fonts") => {
+            if args.get(1).map(String::as_str) == Some("install")
+                && args.get(2).map(String::as_str) == Some("cjk")
+            {
+                let base = args
+                    .iter()
+                    .position(|a| a == "--base")
+                    .and_then(|i| args.get(i + 1))
+                    .cloned();
+                match pdfloom::install_cjk_fonts(base.as_deref()) {
+                    Ok(r) => {
+                        for name in &r.installed {
+                            println!("installed {name} into {}", r.cache_dir);
+                        }
+                        for name in &r.already_present {
+                            println!("already present: {name}");
+                        }
+                        if r.installed.is_empty() {
+                            println!("nothing to do; cache: {}", r.cache_dir);
+                        }
+                        ExitCode::SUCCESS
+                    }
+                    Err(e) => {
+                        eprintln!("error: {e}");
+                        ExitCode::from(2)
+                    }
+                }
+            } else {
+                eprintln!("usage: pdfloom fonts install cjk [--base URL]");
+                ExitCode::from(2)
             }
         }
         Some("build") => {

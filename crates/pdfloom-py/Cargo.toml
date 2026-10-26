@@ -1,4 +1,6 @@
 [package]
+# Distributed via PyPI wheel, not crates.io.
+publish = false
 name = "pdfloom-py"
 description = "Python bindings for pdfloom via PyO3"
 version.workspace = true
