@@ -19,7 +19,6 @@
 
 "use strict";
 
-const FONT_BASE = "/fonts/";          // dev: server route; prod: static
 const WORKER_URL = "/worker.js";   // source file in web/; engine assets live under /engine/
 
 /* ------------------------------------------------------------- WasmEngine */
