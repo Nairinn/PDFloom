@@ -28,11 +28,13 @@ confidence-threshold = 0.93
 
 [bans]
 multiple-versions = "warn"
+# Copyleft: the whole point of this project is a clean MIT library.
+# (Plain name entries are the cargo-deny 0.20+ specifier syntax; the
+# nested `deny = true` form broke when the tool updated.)
 deny = [
-    # Copyleft: the whole point of this project is a clean MIT library.
-    { name = "pdf", deny = true },
-    { name = "lopdf", deny = true },
-    { name = "pdfium-render", deny = true },
+    { name = "pdf", reason = "copyleft" },
+    { name = "lopdf", reason = "copyleft" },
+    { name = "pdfium-render", reason = "copyleft" },
 ]
 
 [advisories]
