@@ -385,9 +385,7 @@ where
         }
     }
 
-    let (bytes, report) = doc
-        .to_bytes()
-        .map_err(|e| DefError::Build(e.to_string()))?;
+    let (bytes, report) = doc.to_bytes().map_err(|e| DefError::Build(e.to_string()))?;
     Ok((bytes, report))
 }
 

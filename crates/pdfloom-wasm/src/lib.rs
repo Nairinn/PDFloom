@@ -26,9 +26,7 @@ pub fn version() -> String {
 pub fn catalog() -> String {
     let list = pdfloom_fonts::CATALOG
         .iter()
-        .map(|e| {
-            serde_json::json!({ "family": e.family, "style": e.style, "file": e.file })
-        })
+        .map(|e| serde_json::json!({ "family": e.family, "style": e.style, "file": e.file }))
         .collect::<Vec<_>>();
     serde_json::to_string(&list).unwrap_or_else(|_| "[]".into())
 }
@@ -168,7 +166,8 @@ pub fn build(config_json: &str, fonts: &FontBundle) -> Result<BuildOutput, JsVal
 pub fn validate(pdf: &[u8]) -> Result<String, JsValue> {
     let mut reader = pdfloom_parse::PdfReader::from_bytes(pdf.to_vec())
         .map_err(|e| JsValue::from_str(&format!("parse: {e}")))?;
-    let report = pdfloom_validate::validate_reader(&mut reader).map_err(|e| JsValue::from_str(&e))?;
+    let report =
+        pdfloom_validate::validate_reader(&mut reader).map_err(|e| JsValue::from_str(&e))?;
     let dto = serde_json::json!({
         "findings": report
             .findings

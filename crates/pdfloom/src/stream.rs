@@ -92,11 +92,17 @@ mod ids {
 
 /// Streaming PDF/UA writer. Create, push event batches, [`finish`].
 ///
+/// The sink is generic over [`std::io::Write`]: [`create`] uses a file,
+/// and [`create_over`] accepts any writer (in-memory `Vec<u8>` for the
+/// browser/WASM path and native parity runs). The bytes produced are
+/// identical for every sink kind.
+///
 /// [`finish`]: StreamWriter::finish
-pub struct StreamWriter {
-    /// Buffered output (the file is flushed at finish; every write goes
+/// [`create_over`]: StreamWriter::create_over
+pub struct StreamWriter<W: std::io::Write> {
+    /// Buffered output (the sink is flushed at finish; every write goes
     /// through the 8 KiB buffer, no per-object syscall).
-    out: std::io::BufWriter<std::fs::File>,
+    out: std::io::BufWriter<W>,
     /// PDF byte offset of the next write, tracked by adding bytes written
     /// (no stream_position syscall per object).
     cursor: u64,
@@ -158,7 +164,7 @@ struct ElemRecord {
     scope: Option<String>,
 }
 
-impl StreamWriter {
+impl<W: std::io::Write> StreamWriter<W> {
     /// New streaming writer over a file path. The default font is resolved
     /// immediately so bare documents work.
     pub fn create(
@@ -172,14 +178,30 @@ impl StreamWriter {
         if let Some(parent) = std::path::Path::new(path).parent() {
             let _ = std::fs::create_dir_all(parent);
         }
-        let mut out = std::io::BufWriter::new(std::fs::File::create(path)?);
+        let font = pdfloom_font::LoadedFont::load(default_font_path()?)
+            .map_err(|e| StreamError::Font(e.to_string()))?;
+        Self::create_over(std::fs::File::create(path)?, font, profile, title, lang)
+    }
+
+    /// New streaming writer over any sink (a `Vec<u8>` in memory, a
+    /// socket, ...). `default_font` is the F0 face; the browser path
+    /// passes the Liberation Sans Regular bytes it fetched, so nothing
+    /// here touches the filesystem. The output is byte-identical to
+    /// [`create`](Self::create).
+    pub fn create_over(
+        sink: W,
+        default_font: pdfloom_font::LoadedFont,
+        profile: pdfloom_profile::Profile,
+        title: &str,
+        lang: &str,
+    ) -> Result<Self, StreamError> {
+        let mut out = std::io::BufWriter::new(sink);
         let mut header = format!("%PDF-{}\n", profile.pdf_version().header()).into_bytes();
         header.extend_from_slice(&[0x25, 0xe2, 0xe3, 0xcf, 0xd3, 0x0a]);
         out.write_all(&header)?;
         let cursor = header.len() as u64;
 
-        let fonts = vec![pdfloom_font::LoadedFont::load(default_font_path()?)
-            .map_err(|e| StreamError::Font(e.to_string()))?];
+        let fonts = vec![default_font];
         let font_ids = (0..fonts.len())
             .map(|i| ids::FONT_BASE + (i as u32) * 4)
             .collect();
@@ -613,6 +635,13 @@ impl StreamWriter {
     /// Finish the document: fonts, structure tree, parent tree, pages,
     /// metadata, catalog, xref, trailer. Returns the accessibility report.
     pub fn finish(mut self) -> Result<pdfloom_profile::SaveReport, StreamError> {
+        self.into_sink().map(|(_, report)| report)
+    }
+
+    /// Like [`finish`](Self::finish), but hands back the sink (with the
+    /// complete PDF bytes) instead of discarding it. The in-memory and
+    /// browser paths use this to retrieve the document bytes.
+    pub fn into_sink(mut self) -> Result<(W, pdfloom_profile::SaveReport), StreamError> {
         self.flush_page()?;
 
         // The same centralized rules the flow writer uses (pdfloom-profile
